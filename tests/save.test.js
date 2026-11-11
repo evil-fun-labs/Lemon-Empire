@@ -72,4 +72,30 @@ t.test('hostile name stored and listed verbatim', () => {
   assert.deepEqual(s.list(), [n]);
   assert.equal(s.get(n).name, n);
 });
+t.test('import of an existing name is refused until confirmed (never silent)', () => {
+  const { s } = mk(); s.put('J', good());
+  const older = JSON.parse(s.exportProfile('J')); older.savedAt += 1000; older.state.cash = 777; // file is newer
+  assert.throws(() => s.importProfile(JSON.stringify(older)), (e) => e.code === 'EXISTS');
+  assert.notEqual(s.get('J').state.cash, 777); // untouched
+  const env = s.importProfile(JSON.stringify(older), { overwrite: true });
+  assert.equal(env.state.cash, 777);
+  assert.equal(s.get('J').state.cash, 777);
+});
+t.test('import refuses when the existing save is newer, even with overwrite', () => {
+  const { s } = mk(); s.put('J', good());
+  const older = JSON.parse(s.exportProfile('J')); older.savedAt -= 1000; older.state.cash = 777;
+  assert.throws(() => s.importProfile(JSON.stringify(older), { overwrite: true }), (e) => e.code === 'NEWER');
+  assert.notEqual(s.get('J').state.cash, 777);
+});
+t.test('import of a new name needs no confirmation', () => {
+  const { s } = mk(); s.put('J', good());
+  const other = JSON.parse(s.exportProfile('J')); other.name = 'K';
+  assert.equal(s.importProfile(JSON.stringify(other)).name, 'K');
+  assert.deepEqual(s.list(), ['J', 'K']);
+});
+t.test('name limit: 32 chars ok, 33 rejected', () => {
+  const { s } = mk();
+  s.put('x'.repeat(32), good());
+  assert.throws(() => s.put('x'.repeat(33), good()));
+});
 t.done();

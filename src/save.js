@@ -81,13 +81,25 @@ export function createSave({ backend = globalThis.localStorage, now = () => Date
     return JSON.stringify(env);
   }
 
-  // Validates, stores under the name inside the file, returns the envelope.
-  function importProfile(text) {
+  // Validates, then stores under the name inside the file and returns the envelope.
+  // Never silently overwrites: if that name already has a save, throws an Error with
+  //   code 'EXISTS' (ask the player; retry with { overwrite: true } to replace), or
+  //   code 'NEWER' when the existing save is newer than the file (always refused).
+  function importProfile(text, { overwrite = false } = {}) {
     if (typeof text !== 'string') throw new Error('import must be text');
     if (text.length > MAX_BYTES) throw new Error('import too large');
     let env;
     try { env = JSON.parse(text); } catch { throw new Error('import is not valid JSON'); }
     validateEnvelope(env);
+    const existing = get(env.name);
+    if (existing) {
+      if (existing.savedAt > env.savedAt) {
+        throw Object.assign(new Error(`a newer save named "${env.name}" already exists`), { code: 'NEWER' });
+      }
+      if (!overwrite) {
+        throw Object.assign(new Error(`a save named "${env.name}" already exists`), { code: 'EXISTS' });
+      }
+    }
     backend.setItem(key(env.name), JSON.stringify(env));
     return env;
   }

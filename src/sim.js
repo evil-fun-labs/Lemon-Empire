@@ -1,7 +1,7 @@
 // Deterministic simulation. No DOM, no Date.now, no rAF: time only moves via advance().
 import { prng } from './rng.js';
 import {
-  PRODUCERS, UPGRADES, START, TICK, BASE_PRICE, SELL_TAP_CUPS,
+  PRODUCERS, UPGRADES, START, TICK, STAND_SUGAR, OFFLINE_CAP_S, BASE_PRICE, SELL_TAP_CUPS,
   producerCost, multipliers,
 } from './economy.js';
 
@@ -31,7 +31,7 @@ export function createGame(seed = 1) {
   function tick() {
     const m = multipliers(s.upgrades);
     s.lemons += s.owned.tree * PRODUCERS[0].rate * m.speed * TICK;
-    s.sugar += s.owned.sugar * PRODUCERS[1].rate * m.speed * TICK;
+    s.sugar += (STAND_SUGAR + s.owned.sugar * PRODUCERS[1].rate * m.speed) * TICK;
     const want = s.owned.helper * PRODUCERS[2].rate * m.speed * TICK;
     const cups = Math.min(want, s.lemons / m.efficiency, s.sugar / m.efficiency);
     if (cups > 0) {
@@ -44,8 +44,10 @@ export function createGame(seed = 1) {
   }
 
   // Spec: advance(seconds) steps in fixed 0.1 s ticks; returns new game time.
+  // Rejects (no-op) anything not a finite positive number or longer than the 8 h offline cap,
+  // so an absurd input can never hang the page.
   function advance(seconds) {
-    if (!(seconds > 0) || !Number.isFinite(seconds)) return s.ticks * TICK;
+    if (!(seconds > 0) || !Number.isFinite(seconds) || seconds > OFFLINE_CAP_S) return s.ticks * TICK;
     acc += seconds / TICK;
     const n = Math.floor(acc + 1e-9);
     acc -= n;

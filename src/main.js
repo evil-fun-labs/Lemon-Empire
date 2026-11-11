@@ -1,6 +1,7 @@
 // UI layer. Names and all game text go in via textContent only, never as markup.
 import { createGame } from './sim.js';
 import { createSave, validName } from './save.js';
+import { fmt } from './format.js';
 import { PRODUCERS, UPGRADES, OFFLINE_CAP_S, incomePerSecond, multipliers } from './economy.js';
 
 const $ = (id) => document.getElementById(id);
@@ -21,13 +22,6 @@ let lastWall = Date.now();
 let lastSave = 0;
 let lastRender = 0;
 
-const fmt = (n) => {
-  if (n < 1000) return n < 10 && n % 1 ? n.toFixed(1) : Math.floor(n).toString();
-  const u = ['K', 'M', 'B', 'T'];
-  let i = -1; let v = n;
-  while (v >= 1000 && i < u.length - 1) { v /= 1000; i++; }
-  return v.toFixed(v < 10 ? 2 : 1) + u[i];
-};
 const money = (n) => '$' + fmt(n);
 const mmss = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 
@@ -138,7 +132,7 @@ function render(force) {
   $('r-sugar').textContent = fmt(v.sugar);
   $('clock').textContent = 'Play time ' + mmss(v.time);
   const ips = incomePerSecond(v.owned, v.upgrades, v.demand);
-  $('income').textContent = ips > 0 ? `Up to ${money(ips)} per second from helpers` : 'Hire a Stand Helper to sell while you rest';
+  $('income').textContent = ips > 0 ? `Up to ${money(ips)} per second from helpers` : 'Selling needs a lemon and sugar for each cup. Hire a Stand Helper to sell while you rest';
   for (const p of PRODUCERS) {
     const e = itemEls[p.id]; if (!e) continue;
     const rate = p.rate * multipliers(v.upgrades).speed;
@@ -167,6 +161,7 @@ function openPanel() {
   $('export-text').value = profile ? (saveNow(), saves.exportProfile(profile)) : '';
   $('import-text').value = '';
   $('import-msg').textContent = '';
+  resetImportConfirm();
   $('panel').hidden = false;
 }
 $('btn-export').addEventListener('click', openPanel);
@@ -177,13 +172,28 @@ $('btn-copy').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(t.value); $('import-msg').textContent = 'Copied.'; }
   catch { t.select(); $('import-msg').textContent = 'Select the text and copy it.'; }
 });
+let pendingOverwrite = null; // import text waiting for the player to confirm replacing a save
+function resetImportConfirm() {
+  pendingOverwrite = null;
+  $('btn-import').textContent = 'Import';
+}
+$('import-text').addEventListener('input', resetImportConfirm);
 $('btn-import').addEventListener('click', () => {
+  const text = $('import-text').value.trim();
   try {
-    const env = saves.importProfile($('import-text').value.trim());
+    const env = saves.importProfile(text, { overwrite: pendingOverwrite === text });
+    resetImportConfirm();
     $('import-msg').textContent = `Imported "${env.name}".`;
     if (profile === null) renderProfiles();
     else if (env.name === profile) startProfile(profile);
   } catch (e) {
+    if (e.code === 'EXISTS') {
+      pendingOverwrite = text;
+      $('btn-import').textContent = 'Replace it';
+      $('import-msg').textContent = e.message + '. Tap "Replace it" to overwrite it with this file, or Close to keep it.';
+      return;
+    }
+    resetImportConfirm();
     $('import-msg').textContent = 'Could not import: ' + e.message;
   }
 });

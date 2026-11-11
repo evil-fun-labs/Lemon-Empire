@@ -6,6 +6,9 @@ export const BASE_PRICE = 2; // cash per cup before demand and upgrades
 export const TICK = 0.1; // fixed simulation step, seconds
 export const SELL_TAP_CUPS = 5; // cups sold per tap on "Sell cups"
 export const OFFLINE_CAP_S = 8 * 3600;
+// The stand itself drips this much sugar per second (a jar on the counter), so selling can never
+// become impossible. Sugar Patches stay 5x better and speed upgrades do not scale the drip.
+export const STAND_SUGAR = 0.1;
 export const START = { cash: 10, lemons: 0, sugar: 5 };
 
 export const PRODUCERS = [

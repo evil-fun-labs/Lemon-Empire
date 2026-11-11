@@ -4,6 +4,6 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "test": "node tests/save.test.js && node tests/clock.test.js && node tests/economy.test.js && node tests/nohover.test.js && node tests/device.test.cjs"
+    "test": "node tests/save.test.js && node tests/clock.test.js && node tests/economy.test.js && node tests/softlock.test.js && node tests/format.test.js && node tests/nohover.test.js && node tests/device.test.cjs"
   }
 }
