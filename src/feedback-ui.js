@@ -48,7 +48,10 @@ export function initFeedback({ getView, getWhere }) {
     toastTimer = setTimeout(() => { t.hidden = true; }, 2200);
   }
   const say = (msg) => { $('fb-msg').textContent = msg || ''; };
-  const refreshUnsent = () => { $('fb-unsent').textContent = 'unsent: ' + fb.unsent(); };
+  const refreshUnsent = () => {
+    $('fb-unsent').textContent = 'unsent: ' + fb.unsent();
+    $('fb-sent').textContent = 'sent, not confirmed: ' + fb.sentUnconfirmed();
+  };
 
   function renderQuestion() {
     const q = fb.nextQuestion(stageOf(getView()));
@@ -81,17 +84,23 @@ export function initFeedback({ getView, getWhere }) {
     $('fb-q-submit').disabled = !hasAnswer;
     $('fb-free-submit').disabled = $('fb-free-input').value.trim() === '';
   }
-  function afterSubmit() {
-    toast('Submitted, thanks!');
+  // The toast only claims what is true: "Sent" once the request went out, otherwise the record is on this phone.
+  // (A sent request is still unconfirmed: the browser cannot read a Google Form's answer. See the panel counts.)
+  async function afterSubmit(rec) {
     say('');
     renderQuestion();
     refreshUnsent();
-    fb.flush().then(refreshUnsent, refreshUnsent);
+    let went = false;
+    try { await fb.flush(); } catch { /* flush reports through the counts */ }
+    went = fb.deliveryOf(rec.id) !== 'unsent';
+    refreshUnsent();
+    toast(went ? 'Sent, thanks!' : fb.sinkEnabled() ? 'Saved on this phone, will retry' : 'Saved on this phone, thanks!');
   }
   function trySubmit(args, clear) {
-    try { fb.submit(args); } catch (e) { say(e.message); return; }
+    let rec;
+    try { rec = fb.submit(args); } catch (e) { say(e.message); return; }
     clear();
-    afterSubmit();
+    afterSubmit(rec);
   }
 
   $('fb-q-submit').addEventListener('click', () => {
@@ -110,7 +119,7 @@ export function initFeedback({ getView, getWhere }) {
     const box = $('fb-export-text');
     box.value = fb.exportText();
     box.hidden = false; $('fb-copy').hidden = false;
-    say(fb.unsent() ? 'Copy this text and send it to Jesse.' : 'Nothing unsent. Everything has been delivered.');
+    say(fb.unsent() || fb.sentUnconfirmed() ? 'Copy this text and send it to Jesse. It lists unsent and sent, not confirmed feedback.' : 'Nothing to export yet.');
   });
   $('fb-copy').addEventListener('click', async () => {
     const t = $('fb-export-text');

@@ -110,7 +110,18 @@ const newCtx = (browser) => browser.newContext({ viewport: { width: 390, height:
   ok('Submit enables once something is typed', await page.isEnabled('#fb-q-submit'));
   await page.tap('#fb-q-submit');
   await page.waitForSelector('#fb-toast:not([hidden])');
-  ok('toast says "Submitted, thanks!"', (await T('#fb-toast')) === 'Submitted, thanks!');
+  ok('toast (no sink) says "Saved on this phone, thanks!", never "Sent"', (await T('#fb-toast')) === 'Saved on this phone, thanks!');
+  {
+    const g = await page.evaluate(() => {
+      const r = (id) => { const b = document.getElementById(id).getBoundingClientRect(); return { top: b.top, bottom: b.bottom, left: b.left, right: b.right, w: b.width, h: b.height }; };
+      const t = document.getElementById('fb-toast');
+      return { toast: r('fb-toast'), title: r('fb-title'), btn: r('btn-feedback'), pe: getComputedStyle(t).pointerEvents, vh: innerHeight, vw: innerWidth };
+    });
+    const hit = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+    ok('toast does not cover the panel title', !hit(g.toast, g.title), JSON.stringify(g));
+    ok('toast does not cover the Feedback header button', !hit(g.toast, g.btn), JSON.stringify(g));
+    ok('toast sits at the bottom, inside the viewport (390x844), pointer-events none', g.toast.top > g.vh / 2 && g.toast.bottom <= g.vh - 8 && g.toast.left >= 0 && g.toast.right <= g.vw && g.pe === 'none', JSON.stringify(g));
+  }
   await shot('18-feedback-toast.png');
   ok('next unanswered question appears (phone and browser)', (await T('#fb-q-text')) === qText('q-phone-browser'));
   ok('answer box cleared for the next question', (await page.inputValue('#fb-q-input')) === '');
@@ -163,7 +174,7 @@ const newCtx = (browser) => browser.newContext({ viewport: { width: 390, height:
   await shot('20-feedback-free-form.png');
   await page.tap('#fb-free-submit');
   await page.waitForSelector('#fb-toast:not([hidden])');
-  ok('free-form: toast shown, box cleared, question on screen unchanged', (await T('#fb-toast')) === 'Submitted, thanks!' && (await page.inputValue('#fb-free-input')) === '' && (await T('#fb-q-text')) === qText('q-upgrade-choice'));
+  ok('free-form: toast shown, box cleared, question on screen unchanged', (await T('#fb-toast')) === 'Saved on this phone, thanks!' && (await page.inputValue('#fb-free-input')) === '' && (await T('#fb-q-text')) === qText('q-upgrade-choice'));
   await submitQ('I regret nothing');
   ok('all current questions answered: says so, and the free-form box stays', await page.isVisible('#fb-q-done') && await page.isHidden('#fb-q-block') && await page.isVisible('#fb-free-input') && await page.isVisible('#fb-free-submit'));
   targets.panelDone = await page.evaluate(MEASURE);
@@ -181,10 +192,10 @@ const newCtx = (browser) => browser.newContext({ viewport: { width: 390, height:
   await page.tap('#fb-export');
   const exportText = await page.inputValue('#fb-export-text');
   const exp = JSON.parse(exportText);
-  ok('Export feedback shows every unsent record as JSON', exp.records.length === 8 && exp.unsent === 8 && exp.player === 'Tess' && exp.version === VER_TEXT, `${exp.records.length}`);
+  ok('Export feedback shows every unsent record as JSON', exp.records.length === 8 && exp.unsent === 8 && exp.sentNotConfirmed === 0 && Array.isArray(exp.sentRecords) && exp.player === 'Tess' && exp.version === VER_TEXT, `${exp.records.length}`);
   ok('export text shows hostile text literally', exp.records.some((r) => r.text === '<script>window.__pwned=1</script><b>bold</b>') && exp.records.some((r) => r.text.includes('<img src=x onerror=alert(1)>')));
   ok('2500-character text was cut to 2000', exp.records.some((r) => r.text === 'z'.repeat(2000)) && exp.records.every((r) => r.text.length <= 2000));
-  ok('unsent: 8 shown', (await T('#fb-unsent')) === 'unsent: 8');
+  ok('unsent: 8 shown, sent, not confirmed: 0 shown', (await T('#fb-unsent')) === 'unsent: 8' && (await T('#fb-sent')) === 'sent, not confirmed: 0');
   await page.evaluate(() => document.getElementById('fb-export').scrollIntoView({ block: 'start' }));
   await shot('22-feedback-export.png');
   targets.panelExport = await page.evaluate(MEASURE);
@@ -270,41 +281,77 @@ const newCtx = (browser) => browser.newContext({ viewport: { width: 390, height:
   ok('console clean (no errors)', errors.length === 0, errors.join('|'));
   await ctx.close();
 
-  // ---- sink retry, with a configured (fake) form endpoint
-  const ctx2 = await newCtx(browser);
-  const p2 = await ctx2.newPage();
-  const errors2 = [];
-  p2.on('pageerror', (e) => errors2.push(String(e)));
-  const posts = []; let attempt = 0;
-  await p2.route('**/feedback-config.json', (r) => r.fulfill({ contentType: 'application/json', body: JSON.stringify({
+  // ---- HttpSink against a mock endpoint: refused connection, server 500, success
+  const CFG = JSON.stringify({
     url: 'https://forms.example.test/forms/d/e/FAKE/formResponse',
-    fieldMap: { text: 'entry.111', player: 'entry.222', version: 'entry.333', questionId: 'entry.444', 'context.cash': 'entry.555', context: 'entry.666' } }) }));
-  await p2.route('https://forms.example.test/**', (r) => {
-    attempt++; const req = r.request();
-    posts.push({ n: attempt, method: req.method(), type: req.headers()['content-type'], body: req.postData() });
-    return attempt === 1 ? r.abort('failed') : r.fulfill({ status: 200, body: 'ok' });
-  });
-  await p2.goto(url);
-  await p2.waitForFunction(() => document.getElementById('app-version').textContent !== '');
-  await p2.fill('#name-input', 'Sinky'); await p2.tap('button[type=submit]');
-  await p2.waitForSelector('#screen-game:not([hidden])');
-  await p2.tap('#btn-feedback'); await p2.waitForSelector('#fb-panel:not([hidden])');
-  ok('sink configured: the "kept on this phone" note is hidden', await p2.isHidden('#fb-note'));
-  await p2.fill('#fb-free-input', 'sink test & more'); await p2.tap('#fb-free-submit');
-  await p2.waitForFunction(() => window.__feedback.unsent() === 1);
-  await p2.waitForFunction(() => document.getElementById('fb-unsent').textContent === 'unsent: 1');
-  await p2.waitForTimeout(300);
-  ok('first send fails (offline): record stays queued, unsent: 1', posts.length === 1 && (await p2.textContent('#fb-unsent')) === 'unsent: 1', JSON.stringify(posts.length));
-  await p2.tap('#fb-close');
-  await p2.tap('#btn-feedback'); await p2.waitForSelector('#fb-panel:not([hidden])');
-  await p2.waitForFunction(() => document.getElementById('fb-unsent').textContent === 'unsent: 0', null, { timeout: 5000 });
-  ok('next open retries and delivers: unsent: 0', posts.length === 2 && (await p2.textContent('#fb-unsent')) === 'unsent: 0');
-  const form = new URLSearchParams(posts[1].body);
-  ok('POST is form-encoded with the mapped Google Form fields', posts[1].method === 'POST' && /^application\/x-www-form-urlencoded/.test(posts[1].type) &&
-    form.get('entry.111') === 'sink test & more' && form.get('entry.222') === 'Sinky' && form.get('entry.333') === VER_TEXT && form.get('entry.444') === '' && form.get('entry.555') !== null && JSON.parse(form.get('entry.666')).screen === 'game', posts[1].body);
-  ok('delivered records leave the queue in storage', await p2.evaluate(() => JSON.parse(localStorage.getItem('lemon-empire:v1:feedback:Sinky')).queue.length === 0));
-  ok('no page errors in the sink run', errors2.length === 0, errors2.join('|'));
-  await ctx2.close();
+    fieldMap: { text: 'entry.111', player: 'entry.222', version: 'entry.333', questionId: 'entry.444', 'context.cash': 'entry.555', context: 'entry.666' } });
+  async function sinkRun(name, mode) {
+    const c = await newCtx(browser); const p = await c.newPage();
+    const errs = []; p.on('pageerror', (e) => errs.push(String(e)));
+    const posts = [];
+    await p.route('**/feedback-config.json', (r) => r.fulfill({ contentType: 'application/json', body: CFG }));
+    await p.route('https://forms.example.test/**', (r) => {
+      const req = r.request();
+      posts.push({ method: req.method(), type: req.headers()['content-type'], body: req.postData() });
+      if (mode.current === 'refuse') return r.abort('connectionrefused');
+      if (mode.current === '500') return r.fulfill({ status: 500, body: 'server error' });
+      return r.fulfill({ status: 200, body: 'ok' });
+    });
+    await p.goto(url);
+    await p.waitForFunction(() => document.getElementById('app-version').textContent !== '');
+    await p.fill('#name-input', name); await p.tap('button[type=submit]');
+    await p.waitForSelector('#screen-game:not([hidden])');
+    await p.tap('#btn-feedback'); await p.waitForSelector('#fb-panel:not([hidden])');
+    return { c, p, posts, errs };
+  }
+  const sendFree = async (p, text) => { await p.fill('#fb-free-input', text); await p.tap('#fb-free-submit'); await p.waitForSelector('#fb-toast:not([hidden])'); };
+  const counts = (p) => p.evaluate(() => [document.getElementById('fb-unsent').textContent, document.getElementById('fb-sent').textContent]);
+
+  // refused connection, then success on the next open
+  {
+    const mode = { current: 'refuse' };
+    const { c, p, posts, errs } = await sinkRun('Refused', mode);
+    ok('sink configured: the "kept on this phone" note is hidden', await p.isHidden('#fb-note'));
+    await sendFree(p, 'sink test & more');
+    ok('refused connection: toast says "Saved on this phone, will retry"', (await p.textContent('#fb-toast')) === 'Saved on this phone, will retry', await p.textContent('#fb-toast'));
+    ok('refused connection: unsent: 1, sent, not confirmed: 0', JSON.stringify(await counts(p)) === JSON.stringify(['unsent: 1', 'sent, not confirmed: 0']), JSON.stringify(await counts(p)));
+    ok('refused connection: one attempt made, record still in storage queue', posts.length === 1 && await p.evaluate(() => JSON.parse(localStorage.getItem('lemon-empire:v1:feedback:Refused')).queue.length === 1));
+    mode.current = 'ok';
+    await p.tap('#fb-close'); await p.tap('#btn-feedback'); await p.waitForSelector('#fb-panel:not([hidden])');
+    await p.waitForFunction(() => document.getElementById('fb-sent').textContent === 'sent, not confirmed: 1', null, { timeout: 5000 });
+    ok('next open retries: request went out, unsent: 0, sent, not confirmed: 1', posts.length === 2 && JSON.stringify(await counts(p)) === JSON.stringify(['unsent: 0', 'sent, not confirmed: 1']));
+    const form = new URLSearchParams(posts[1].body);
+    ok('POST is form-encoded with the mapped Google Form fields', posts[1].method === 'POST' && /^application\/x-www-form-urlencoded/.test(posts[1].type) &&
+      form.get('entry.111') === 'sink test & more' && form.get('entry.222') === 'Refused' && form.get('entry.333') === VER_TEXT && form.get('entry.444') === '' && form.get('entry.555') !== null && JSON.parse(form.get('entry.666')).screen === 'game', posts[1].body);
+    ok('stored: queue empty, sent log holds the record as "sent, not confirmed"', await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('lemon-empire:v1:feedback:Refused')); return d.queue.length === 0 && d.sent.length === 1 && d.sent[0].delivery === 'sent, not confirmed' && d.sent[0].text === 'sink test & more'; }));
+    await p.tap('#fb-export');
+    const ex = JSON.parse(await p.inputValue('#fb-export-text'));
+    ok('Export includes the sent, not confirmed record', ex.unsent === 0 && ex.sentNotConfirmed === 1 && ex.sentRecords.length === 1 && ex.sentRecords[0].text === 'sink test & more');
+    ok('no page errors (refused run)', errs.length === 0, errs.join('|'));
+    await c.close();
+  }
+  // server answers 500: the browser cannot see it, so the honest label is sent, not confirmed
+  {
+    const mode = { current: '500' };
+    const { c, p, posts, errs } = await sinkRun('Err500', mode);
+    await sendFree(p, 'five hundred');
+    ok('server 500: request went out, so toast says "Sent, thanks!"', (await p.textContent('#fb-toast')) === 'Sent, thanks!', await p.textContent('#fb-toast'));
+    ok('server 500: counted as sent, not confirmed (never as delivered); unsent: 0', posts.length === 1 && JSON.stringify(await counts(p)) === JSON.stringify(['unsent: 0', 'sent, not confirmed: 1']), JSON.stringify(await counts(p)));
+    await p.tap('#fb-export');
+    const ex = JSON.parse(await p.inputValue('#fb-export-text'));
+    ok('server 500: record is kept in the export, not dropped', ex.sentRecords.length === 1 && ex.sentRecords[0].text === 'five hundred' && ex.sentRecords[0].delivery === 'sent, not confirmed');
+    ok('no page errors (500 run)', errs.length === 0, errs.join('|'));
+    await c.close();
+  }
+  // success
+  {
+    const mode = { current: 'ok' };
+    const { c, p, posts, errs } = await sinkRun('Fine', mode);
+    await sendFree(p, 'all good');
+    ok('success: toast "Sent, thanks!", unsent: 0, sent, not confirmed: 1', (await p.textContent('#fb-toast')) === 'Sent, thanks!' && posts.length === 1 && JSON.stringify(await counts(p)) === JSON.stringify(['unsent: 0', 'sent, not confirmed: 1']), JSON.stringify(await counts(p)));
+    ok('no page errors (success run)', errs.length === 0, errs.join('|'));
+    await c.close();
+  }
 
   await browser.close(); srv.close();
   console.log(`# device-feedback: ${passed} passed, ${failed} failed`);

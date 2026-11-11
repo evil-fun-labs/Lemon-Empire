@@ -317,6 +317,108 @@ test('save module reserves the feedback: prefix so queue keys never look like pr
   assert.throws(() => saves.put('feedback:Jesse', g.snapshot()));
 });
 
+
+/* ---- slice 2: delivery honesty, stage-matched order, text sanitizing ---- */
+// Mock endpoint behind HttpSink: the way a browser sees no-cors answers. A 500 and a 200 both come back opaque.
+function mockEndpoint(kind) {
+  const hits = [];
+  const fetchImpl = async (url, init) => {
+    hits.push({ url, init });
+    if (kind === 'refused') throw new TypeError('Failed to fetch (connection refused)');
+    if (kind === '500') return { type: 'opaque', ok: false, status: 0 }; // server said 500, browser shows opaque
+    return { type: 'opaque', ok: false, status: 0 }; // success looks identical
+  };
+  return { hits, sink: new HttpSink('https://x.test/f', { text: 'entry.1' }, { fetchImpl }) };
+}
+test('HttpSink + mock endpoint refusing the connection: record stays unsent, nothing marked sent, retry works', async () => {
+  const ep = mockEndpoint('refused');
+  const { fb, backend } = mk({ sink: ep.sink }); const rec = fb.submit({ text: 'hello' });
+  const r = await fb.flush();
+  assert.equal(r.sent, 0); assert.equal(r.unsent, 1); assert.equal(r.sentUnconfirmed, 0); assert.ok(r.error);
+  assert.equal(fb.deliveryOf(rec.id), 'unsent'); assert.equal(fb.sentUnconfirmed(), 0);
+  assert.equal(JSON.parse(backend.getItem(KEY_PREFIX + 'Jesse')).queue.length, 1);
+  assert.equal(ep.hits.length, 1);
+});
+test('HttpSink + mock endpoint answering 500: request went out, record is "sent, not confirmed", kept and exported', async () => {
+  const ep = mockEndpoint('500');
+  const { fb, backend } = mk({ sink: ep.sink }); const rec = fb.submit({ text: 'five hundred' });
+  const r = await fb.flush();
+  assert.equal(r.sent, 1); assert.equal(r.unsent, 0); assert.equal(r.sentUnconfirmed, 1); assert.equal(r.error, null);
+  assert.equal(fb.deliveryOf(rec.id), 'sent, not confirmed');
+  const stored = JSON.parse(backend.getItem(KEY_PREFIX + 'Jesse'));
+  assert.equal(stored.queue.length, 0); assert.equal(stored.sent.length, 1);
+  assert.equal(stored.sent[0].text, 'five hundred'); assert.equal(stored.sent[0].delivery, 'sent, not confirmed'); assert.match(stored.sent[0].sentAt, /^\d{4}-/);
+  const exp = JSON.parse(fb.exportText());
+  assert.equal(exp.unsent, 0); assert.equal(exp.sentNotConfirmed, 1); assert.deepEqual(exp.sentRecords.map((x) => x.id), [rec.id]);
+  assert.equal(r.sent, ep.hits.length);
+});
+test('HttpSink + mock endpoint success: same honest label, and it is never called twice for one record', async () => {
+  const ep = mockEndpoint('ok');
+  const { fb } = mk({ sink: ep.sink }); const a = fb.submit({ text: 'one' });
+  await fb.flush(); await fb.flush();
+  assert.equal(ep.hits.length, 1); assert.equal(fb.deliveryOf(a.id), 'sent, not confirmed'); assert.equal(fb.unsent(), 0); assert.equal(fb.sentUnconfirmed(), 1);
+});
+test('export lists unsent and sent-unconfirmed together; sent log survives a reload; answered ids stay', async () => {
+  const backend = memoryBackend(); const ep = mockEndpoint('ok');
+  const m = mk({ backend, sink: ep.sink });
+  m.fb.submit({ questionId: 'a', text: 'sent one' }); await m.fb.flush();
+  m.fb.setSink(new LocalSink()); m.fb.submit({ text: 'still local' });
+  const fb2 = createFeedback({ backend, getVersion: () => 'v' }); fb2.setQuestions(QS); fb2.setPlayer('Jesse');
+  assert.equal(fb2.unsent(), 1); assert.equal(fb2.sentUnconfirmed(), 1); assert.deepEqual(fb2.answeredIds(), ['a']);
+  const exp = JSON.parse(fb2.exportText());
+  assert.deepEqual(exp.records.map((r) => r.text), ['still local']); assert.deepEqual(exp.sentRecords.map((r) => r.text), ['sent one']);
+});
+test('old stored data without a sent log still loads', () => {
+  const backend = memoryBackend(); backend.setItem(KEY_PREFIX + 'Jesse', JSON.stringify({ v: 1, answered: ['a'], queue: [{ id: 'q1', text: 't' }] }));
+  const { fb } = mk({ backend }); assert.equal(fb.unsent(), 1); assert.equal(fb.sentUnconfirmed(), 0); assert.deepEqual(fb.answeredIds(), ['a']);
+});
+test('stage-matched questions come before generic ones, then file order', () => {
+  const Q = [
+    { id: 'g1', text: 'any 1', kind: 'text', when: 'any' },
+    { id: 'g2', text: 'no when', kind: 'text' },
+    { id: 'sh1', text: 'shop 1', kind: 'text', when: 'shop' },
+    { id: 'st', text: 'stand only', kind: 'text', when: 'stand' },
+    { id: 'sh2', text: 'shop 2', kind: 'text', when: ['rocket', 'shop'] },
+    { id: 'ro', text: 'rocket', kind: 'text', when: 'rocket' },
+  ];
+  const fb = createFeedback({ backend: memoryBackend(), getVersion: () => 'v' }); fb.setQuestions(Q); fb.setPlayer('T');
+  const order = (stage) => { const out = []; for (;;) { const q = fb.nextQuestion(stage); if (!q) return out; out.push(q.id); fb.submit({ questionId: q.id, text: 'x' }); } };
+  assert.equal(fb.nextQuestion('stand').id, 'st'); // exact stage match beats earlier generic ones
+  const fb2 = createFeedback({ backend: memoryBackend(), getVersion: () => 'v' }); fb2.setQuestions(Q); fb2.setPlayer('T2');
+  assert.equal(fb2.nextQuestion('shop').id, 'sh1');
+  assert.equal(fb2.nextQuestion('rocket').id, 'sh2'); // list containing the stage counts as an exact match; file order inside the group
+  assert.equal(fb2.nextQuestion('franchise').id, 'g1'); // nothing matches exactly: generic and earlier-stage questions, file order
+  assert.deepEqual(order('shop'), ['sh1', 'sh2', 'g1', 'g2', 'st']); // sh2 matches "shop" through its list; then generic; then stand (still open, earlier stage)
+  assert.equal(fb.nextQuestion('shop'), null);
+  assert.equal(fb.nextQuestion('rocket').id, 'ro');
+});
+test('stage-matched order: after the matching question is answered the generic ones follow', () => {
+  const { fb } = mk(); // QS: a(any) b(none) s(shop) r(rocket)
+  assert.equal(fb.nextQuestion('shop').id, 's');
+  fb.submit({ questionId: 's', text: 'x' });
+  assert.equal(fb.nextQuestion('shop').id, 'a');
+  assert.equal(fb.nextQuestion('rocket').id, 'r');
+});
+test('cleanText strips lone surrogates and bidi overrides but keeps emoji, ZWJ sequences and normal text', () => {
+  assert.equal(cleanText('a\ud800b'), 'ab'); assert.equal(cleanText('a\udc00b'), 'ab'); assert.equal(cleanText('x\ud83d'), 'x'); assert.equal(cleanText('\ude00y'), 'y');
+  assert.equal(cleanText('a\ud83d😀'), 'a\u{1F600}');
+  for (const c of ['‪', '‫', '‬', '‭', '‮', '⁦', '⁧', '⁨', '⁩']) assert.equal(cleanText('ab' + c + 'cd'), 'abcd');
+  assert.equal(cleanText('txt‮gpj.exe'), 'txtgpj.exe');
+  const fam = '\u{1F468}‍\u{1F469}‍\u{1F467}'; const lemon = '\u{1F34B}';
+  assert.equal(cleanText(`${lemon} ${fam} café שלום`), `${lemon} ${fam} café שלום`);
+  assert.equal(cleanText('‮\ud800'), '');
+});
+test('submit applies the sanitizing: stored and exported text is clean; only-junk text is EMPTY', () => {
+  const { fb, backend } = mk();
+  const r = fb.submit({ text: 'great \u{1F34B}\ud800 game‮!' });
+  assert.equal(r.text, 'great \u{1F34B} game!');
+  assert.equal(JSON.parse(backend.getItem(KEY_PREFIX + 'Jesse')).queue[0].text, 'great \u{1F34B} game!');
+  assert.doesNotThrow(() => encodeURIComponent(JSON.parse(fb.exportText()).records[0].text)); // lone surrogate would throw URIError
+  assert.equal(codeOf(() => fb.submit({ text: '‮\ud800⁦' })), 'EMPTY');
+  const e = fb.submit({ text: '\ud800' + '\u{1F34B}'.repeat(2100) });
+  assert.equal(Array.from(e.text).length, MAX_TEXT);
+});
+
 for (const [name, fn] of tests) {
   try { await fn(); passed++; console.log(`PASS ${name}`); } catch (e) { failed++; console.log(`FAIL ${name}: ${e.message}`); }
 }

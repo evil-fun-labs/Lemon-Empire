@@ -175,5 +175,6 @@ body.space .panel-card { background: var(--card); }
 .fb-options .btn { text-align: left; }
 .fb-options .btn.selected { background: var(--accent); border-color: #c07f00; color: var(--accent-ink); box-shadow: 0 3px 0 #c07f00; }
 .fb-unsent { margin-top: 12px; font-variant-numeric: tabular-nums; }
+.fb-sent { margin-top: 2px; font-variant-numeric: tabular-nums; }
 .version { text-align: center; color: var(--muted); font-size: 0.75rem; margin: 18px 0 0; }
-.toast { position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); z-index: 60; max-width: calc(100% - 32px); padding: 12px 20px; border-radius: 999px; background: #1f6b2c; color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); pointer-events: none; white-space: nowrap; }
+.toast { position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 60; max-width: calc(100% - 32px); padding: 12px 20px; border-radius: 999px; background: #1f6b2c; color: #fff; font-weight: 700; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); pointer-events: none; text-align: center; }
