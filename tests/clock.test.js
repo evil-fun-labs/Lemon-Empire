@@ -63,7 +63,7 @@ t.test('state() has cash, lemons, sugar, owned, upgrades, available, time, rocke
   assert.equal(s.rocket, false);
   assert.ok(s.available.every((a) => typeof a.id === 'string' && a.cost > 0));
 });
-t.test('buy/click/franchise return booleans; franchise false in slice 1', () => {
+t.test('buy/click/franchise return booleans; franchise is false when it is not offered', () => {
   const g = createGame(1);
   assert.equal(g.click(), true);
   assert.equal(g.buy('helper'), false); // cash 10 < 50

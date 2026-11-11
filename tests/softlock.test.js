@@ -91,4 +91,50 @@ t.test('after buying the Shop with nothing else, tapping alone still earns (no d
   for (let s = 0; s < 600; s++) { g.click(); g.sell(); g.advance(1); }
   assert.ok(g.view().cash > 5, String(g.view().cash));
 });
+
+// Slice 3: post-reset states. The Franchise restarts the economy with the Shop closed and nothing owned, so the same
+// dead-end hunt runs from four start states: the Franchise on offer (the reset itself is one of the 8 actions, and
+// so is a second one), just after a real reset, a mid second run, and a run at the multiplier cap.
+const FR_OPS = ['sell', 'tree', 'helper', 'franchise', 'shop', 'orchard', 'clerk', 'squeeze5'];
+const frApply = (g, op) => (op === 'franchise' ? g.franchise() : apply(g, op));
+const OFFER = { cash: 60000, cupsSold: 9000, shop: true, rocket: true, owned: { tree: 8, sugar: 7, helper: 6, orchard: 10, refinery: 4, clerk: 4 }, upgrades: ['speed1', 'cost1'] };
+const FR_STARTS = {
+  'franchise on offer': (seed) => { const g = createGame(seed); g.load({ ...g.snapshot(), ...OFFER }); return g; },
+  'just after a reset': (seed) => { const g = FR_STARTS['franchise on offer'](seed); g.franchise(); return g; },
+  'mid second run': (seed) => { const g = FR_STARTS['just after a reset'](seed); g.load({ ...g.snapshot(), cash: 1500, cupsSold: 450, ticks: 9000, owned: { ...g.snapshot().owned, tree: 4, sugar: 3, helper: 2 } }); return g; },
+  'at the multiplier cap': (seed) => { const g = FR_STARTS['just after a reset'](seed); g.load({ ...g.snapshot(), franchises: 2 }); return g; },
+};
+t.test('post-reset: every first-3-action sequence incl. the reset itself, 4 start states x seeds 1-3: cash rises, values stay sane', () => {
+  const stuck = []; const bad = []; let runs = 0; let minGain = Infinity;
+  for (const [label, mkStart] of Object.entries(FR_STARTS)) for (let seed = 1; seed <= 3; seed++) {
+    for (const a of FR_OPS) for (const b of FR_OPS) for (const c of FR_OPS) {
+      const g = mkStart(seed);
+      for (const op of [a, b, c]) frApply(g, op);
+      const base = g.view().cash;
+      for (let s = 0; s < 600; s++) { g.click(); g.sell(); g.advance(1); }
+      const gain = g.view().cash - base;
+      minGain = Math.min(minGain, gain);
+      const v = g.view();
+      for (const k of ['cash', 'lemons', 'sugar', 'cupsSold', 'franchiseMult']) if (!Number.isFinite(v[k]) || v[k] < 0) bad.push(`${label}/seed${seed}:${a},${b},${c}:${k}`);
+      for (const id of Object.keys(v.owned)) if (!Number.isInteger(v.owned[id]) || v.owned[id] < 0) bad.push(`${label}/seed${seed}:${a},${b},${c}:owned.${id}`);
+      runs++;
+      if (gain < MIN_GAIN) stuck.push(`${label}/seed${seed}:${a},${b},${c}`);
+    }
+  }
+  console.log('     smallest 600 s gain across all post-reset sequences:', minGain.toFixed(1));
+  assert.equal(runs, 4 * 3 * 512);
+  assert.equal(bad.length, 0, bad.slice(0, 3).join(' | '));
+  assert.equal(stuck.length, 0, `${stuck.length} softlocked, e.g. ${stuck.slice(0, 3).join(' | ')}`);
+});
+t.test('after a reset with nothing else bought, tapping alone still earns, and the Shop can be reached again', () => {
+  const g = FR_STARTS['just after a reset'](1);
+  for (let s = 0; s < 1800; s++) {
+    g.click(); g.sell();
+    for (const id of ['sugar', 'tree', 'helper']) if (g.view().owned[id] < 3) g.buy(id);
+    g.advance(1);
+  }
+  assert.ok(g.view().cupsSold >= 300, `cups ${g.view().cupsSold}`);
+  g.load({ ...g.snapshot(), cash: 5000 });
+  assert.equal(g.buy('shop'), true);
+});
 t.done();

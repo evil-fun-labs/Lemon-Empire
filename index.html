@@ -45,13 +45,19 @@
     <div id="shop-offer" class="goal" hidden>
       <h2>Next: open a Shop</h2>
       <p id="shop-progress" class="note"></p>
-      <button type="button" id="btn-shop" class="btn big primary" hidden></button>
+      <button type="button" id="btn-shop" class="btn big primary" hidden><span class="goal-label"></span><span class="goal-need"></span></button>
     </div>
     <div id="rocket-offer" class="goal" hidden>
       <h2>Next: the Lemon Rocket</h2>
       <p id="rocket-progress" class="note"></p>
-      <button type="button" id="btn-launch" class="btn big primary" hidden></button>
+      <button type="button" id="btn-launch" class="btn big primary" hidden><span class="goal-label"></span><span class="goal-need"></span></button>
     </div>
+    <div id="franchise-offer" class="goal" hidden>
+      <h2>Next: open a Franchise</h2>
+      <p id="franchise-progress" class="note"></p>
+      <button type="button" id="btn-franchise" class="btn big primary" hidden><span class="goal-label"></span><span class="goal-need"></span></button>
+    </div>
+    <p id="franchise-badge" class="franchise-badge" hidden></p>
     <h2>Stand</h2>
     <div id="producers" class="list"></div>
     <div id="shop-section" hidden>
@@ -109,7 +115,7 @@
     <div class="stars s1"></div><div class="stars s2"></div><div class="stars s3"></div>
     <div class="ground" aria-hidden="true"></div>
     <div class="rocket" aria-hidden="true">
-      <svg viewBox="0 0 60 150" width="84" height="210" focusable="false">
+      <svg viewBox="0 0 60 106" width="84" height="148" focusable="false">
         <path d="M30 4 C44 24 48 52 46 92 L14 92 C12 52 16 24 30 4 Z" fill="#fff6c8" stroke="#3a2a00" stroke-width="3" stroke-linejoin="round"/>
         <circle cx="30" cy="48" r="9" fill="#6bd0ff" stroke="#3a2a00" stroke-width="3"/>
         <path d="M14 70 L2 104 L14 96 Z M46 70 L58 104 L46 96 Z" fill="#f0a000" stroke="#3a2a00" stroke-width="3" stroke-linejoin="round"/>
@@ -121,6 +127,34 @@
     <p class="cap cap-2">Liftoff!</p>
     <p class="cap cap-3">Orbit reached</p>
     <button type="button" id="btn-launch-continue" class="btn launch-continue">Continue</button>
+  </section>
+
+  <!-- Franchise: ask first (it restarts the run), then the reveal. -->
+  <section id="franchise-confirm" class="overlay franchise" role="dialog" aria-modal="true" aria-labelledby="franchise-confirm-title" hidden>
+    <div class="stars s1"></div><div class="stars s2"></div><div class="stars s3"></div>
+    <div class="overlay-inner">
+      <p class="kicker">Franchise</p>
+      <h2 id="franchise-confirm-title">Open a Franchise?</h2>
+      <p>You start a brand new stand. Your next run is faster, because every cup pays more for good.</p>
+      <div class="keep-lose">
+        <p><strong>You keep:</strong> the bigger cup price, the rocket, and the starfield look.</p>
+        <p><strong>You start over:</strong> cash, lemons, sugar, your stand and Shop crew, and your upgrades.</p>
+      </div>
+      <button type="button" id="btn-franchise-confirm" class="btn big primary">Open the Franchise</button>
+      <button type="button" id="btn-franchise-cancel" class="btn big">Not yet</button>
+    </div>
+  </section>
+
+  <section id="franchise-reveal" class="overlay franchise" role="dialog" aria-modal="true" aria-labelledby="franchise-reveal-title" hidden>
+    <div class="stars s1"></div><div class="stars s2"></div><div class="stars s3"></div>
+    <div class="overlay-inner">
+      <div class="franchise-badge-art" aria-hidden="true"><span id="franchise-mult-art">x1.5</span></div>
+      <p class="kicker">Franchise</p>
+      <h2 id="franchise-reveal-title">Franchise: your next run is faster</h2>
+      <p id="franchise-reveal-text"></p>
+      <p class="locked-tag" id="franchise-reveal-keep">Your rocket and the stars stay with you.</p>
+      <button type="button" id="btn-franchise-continue" class="btn big primary">Start the next run</button>
+    </div>
   </section>
 
   <!-- After the launch: the next tier, shown but not playable. -->

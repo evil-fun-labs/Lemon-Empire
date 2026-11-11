@@ -1,9 +1,9 @@
 {
   "name": "lemon-empire",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "scripts": {
-    "test": "node tests/save.test.js && node tests/clock.test.js && node tests/economy.test.js && node tests/softlock.test.js && node tests/format.test.js && node tests/shop.test.js && node tests/rush.test.js && node tests/nohover.test.js && node tests/device.test.cjs && node tests/device-reveal.test.cjs"
+    "test": "node tests/save.test.js && node tests/clock.test.js && node tests/economy.test.js && node tests/softlock.test.js && node tests/format.test.js && node tests/shop.test.js && node tests/rush.test.js && node tests/nohover.test.js && node tests/device.test.cjs && node tests/device-reveal.test.cjs && node tests/franchise.test.js && node tests/device-franchise.test.cjs && node tests/device-polish.test.cjs"
   }
 }
