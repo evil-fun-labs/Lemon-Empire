@@ -1,6 +1,6 @@
 {
   "viewport": "390x844 dpr3 touch",
-  "total": 106,
+  "total": 110,
   "under44": [],
   "targets": {
     "shopOffer": [
@@ -392,6 +392,13 @@
       },
       {
         "tag": "button",
+        "id": "btn-franchise",
+        "text": "Open a Franchise",
+        "w": 326,
+        "h": 64
+      },
+      {
+        "tag": "button",
         "id": "",
         "text": "Lemon Tree (0)$15Grows lemons,",
         "w": 358,
@@ -489,6 +496,13 @@
         "text": "Sell cups",
         "w": 174,
         "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-franchise",
+        "text": "Open a Franchise",
+        "w": 326,
+        "h": 64
       },
       {
         "tag": "button",
@@ -592,6 +606,13 @@
       },
       {
         "tag": "button",
+        "id": "btn-franchise",
+        "text": "Open a Franchise",
+        "w": 326,
+        "h": 64
+      },
+      {
+        "tag": "button",
         "id": "",
         "text": "Lemon Tree (0)$15Grows lemons,",
         "w": 358,
@@ -682,6 +703,13 @@
         "text": "Sell cups",
         "w": 174,
         "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-franchise",
+        "text": "Open a Franchise",
+        "w": 326,
+        "h": 64
       },
       {
         "tag": "button",

@@ -5,6 +5,7 @@ import { fmt } from './format.js';
 import {
   PRODUCERS, UPGRADES, OFFLINE_CAP_S, incomePerSecond, multipliers,
   SHOP_MILESTONE_CUPS, SHOP_COST, ROCKET_MILESTONE_UNITS, ROCKET_COST, RUSH_PRICE_MULT,
+  FRANCHISE_MILESTONE, FRANCHISE_CAP,
 } from './economy.js';
 
 const $ = (id) => document.getElementById(id);
@@ -26,9 +27,18 @@ let lastSave = 0;
 let lastRender = 0;
 
 const money = (n) => '$' + fmt(n);
+const MILESTONE_TEXT = '$' + FRANCHISE_MILESTONE.toLocaleString('en-US');
+const mult = (m) => 'x' + String(Math.round(m * 100) / 100);
+// A big goal button: label plus, while it is disabled, a "need $X more" line.
+function setGoalButton(btn, label, cost, cash) {
+  const need = Math.ceil(cost - cash);
+  btn.children[0].textContent = label;
+  btn.children[1].textContent = need > 0 ? `need ${money(need)} more` : '';
+  btn.disabled = need > 0;
+}
 const mmss = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 
-const OVERLAYS = ['reveal-shop', 'launch', 'teaser'];
+const OVERLAYS = ['reveal-shop', 'launch', 'teaser', 'franchise-confirm', 'franchise-reveal'];
 function showOverlay(id, focusId) {
   for (const o of OVERLAYS) $(o).hidden = o !== id;
   if (id) $(id).scrollTop = 0;
@@ -40,6 +50,16 @@ function show(which) {
   $('screen-name').hidden = which !== 'name';
   $('screen-game').hidden = which !== 'game';
 }
+
+/* ---------- pressed look (see style.css .btn.pressed) ---------- */
+let pressedEl = null;
+function unpress() { if (pressedEl) { pressedEl.classList.remove('pressed'); pressedEl = null; } }
+document.addEventListener('pointerdown', (e) => {
+  unpress();
+  const b = e.target.closest ? e.target.closest('.btn') : null;
+  if (b && !b.disabled) { b.classList.add('pressed'); pressedEl = b; }
+});
+for (const ev of ['pointerup', 'pointercancel', 'pointerleave', 'dragend', 'scroll', 'blur']) window.addEventListener(ev, unpress, true);
 
 /* ---------- name screen ---------- */
 function renderProfiles() {
@@ -146,7 +166,7 @@ function render(force) {
   $('r-lemons').textContent = fmt(v.lemons);
   $('r-sugar').textContent = fmt(v.sugar);
   $('clock').textContent = 'Play time ' + mmss(v.time);
-  const ips = incomePerSecond(v.owned, v.upgrades, v.demand);
+  const ips = incomePerSecond(v.owned, v.upgrades, v.demand, v.franchises);
   $('income').textContent = ips > 0 ? `Up to ${money(ips)} per second from helpers` : 'Selling needs a lemon and sugar for each cup. Hire a Stand Helper to sell while you rest';
   document.body.classList.toggle('shop', v.shop);
   document.body.classList.toggle('space', v.rocket);
@@ -155,16 +175,25 @@ function render(force) {
     ? `Your stand sold ${fmt(v.cupsSold)} cups. Time to grow!`
     : `Sell ${SHOP_MILESTONE_CUPS} cups to unlock a Shop: ${Math.floor(v.cupsSold)} of ${SHOP_MILESTONE_CUPS} so far.`;
   $('btn-shop').hidden = !v.shopReady;
-  $('btn-shop').textContent = `Expand into a Shop for ${money(SHOP_COST)}`;
-  $('btn-shop').disabled = v.cash < SHOP_COST;
+  setGoalButton($('btn-shop'), `Expand into a Shop for ${money(SHOP_COST)}`, SHOP_COST, v.cash);
   $('shop-section').hidden = !v.shop;
   $('rocket-offer').hidden = !v.shop || v.rocket;
   $('rocket-progress').textContent = v.rocketReady
     ? 'The Lemon Rocket is ready to build. It is a big step, so it costs a lot.'
     : `Own ${ROCKET_MILESTONE_UNITS} Shop producers to start the Lemon Rocket: ${Math.min(v.shopUnits, ROCKET_MILESTONE_UNITS)} of ${ROCKET_MILESTONE_UNITS} so far.`;
   $('btn-launch').hidden = !v.rocketReady;
-  $('btn-launch').textContent = `Build and launch for ${money(ROCKET_COST)}`;
-  $('btn-launch').disabled = v.cash < ROCKET_COST;
+  setGoalButton($('btn-launch'), `Build and launch for ${money(ROCKET_COST)}`, ROCKET_COST, v.cash);
+  // Franchise: shown after the launch until the bonus is capped.
+  $('franchise-offer').hidden = !v.rocket || v.franchiseAtCap;
+  $('franchise-progress').textContent = v.franchiseReady
+    ? `You reached ${MILESTONE_TEXT}. Open a Franchise and every cup pays ${mult(Math.min(FRANCHISE_CAP, v.franchiseMult * 1.5))} from now on.`
+    : `Reach ${MILESTONE_TEXT} cash to open a Franchise: start over with a faster run.`;
+  $('btn-franchise').hidden = false;
+  setGoalButton($('btn-franchise'), 'Open a Franchise', FRANCHISE_MILESTONE, v.cash);
+  $('franchise-badge').hidden = v.franchises === 0;
+  $('franchise-badge').textContent = v.franchiseAtCap
+    ? `Franchise bonus: cups pay ${mult(v.franchiseMult)}, the most you can get.`
+    : `Franchise bonus: cups pay ${mult(v.franchiseMult)}.`;
   $('teaser-card').hidden = !v.rocket;
   const rushBox = $('rush');
   rushBox.hidden = !v.rush.active;
@@ -192,7 +221,8 @@ function render(force) {
 $('btn-shop').addEventListener('click', () => {
   if (!game.buy('shop')) return;
   saveNow(); render(true);
-  showOverlay('reveal-shop', 'btn-reveal-shop-close');
+  // The grand opening plays once. After a Franchise the Shop just reopens.
+  if (game.view().franchises === 0) showOverlay('reveal-shop', 'btn-reveal-shop-close');
 });
 $('btn-reveal-shop-close').addEventListener('click', () => { showOverlay(null); window.scrollTo(0, 0); });
 $('btn-launch').addEventListener('click', () => {
@@ -202,6 +232,24 @@ $('btn-launch').addEventListener('click', () => {
 });
 $('btn-launch-continue').addEventListener('click', () => showOverlay('teaser', 'btn-teaser-close'));
 $('btn-teaser-close').addEventListener('click', () => { showOverlay(null); window.scrollTo(0, 0); });
+
+$('btn-franchise').addEventListener('click', () => {
+  if (!game.view().franchiseReady) return;
+  showOverlay('franchise-confirm', 'btn-franchise-cancel');
+});
+$('btn-franchise-cancel').addEventListener('click', () => { showOverlay(null); window.scrollTo(0, 0); });
+$('btn-franchise-confirm').addEventListener('click', () => {
+  const before = game.view().franchiseMult;
+  if (!game.franchise()) { showOverlay(null); return; }
+  const v = game.view();
+  $('franchise-mult-art').textContent = mult(v.franchiseMult);
+  $('franchise-reveal-text').textContent =
+    `Cups now pay ${mult(v.franchiseMult)} (was ${mult(before)}), for good. You start over with a fresh stand, and it grows faster than before.` +
+    (v.franchiseAtCap ? ' That is the most a Franchise can give.' : '');
+  saveNow(); render(true);
+  showOverlay('franchise-reveal', 'btn-franchise-continue');
+});
+$('btn-franchise-continue').addEventListener('click', () => { showOverlay(null); window.scrollTo(0, 0); });
 
 $('btn-squeeze').addEventListener('click', () => { game.click(); render(true); });
 $('btn-sell').addEventListener('click', () => { game.sell(); render(true); saveNow(); });

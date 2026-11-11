@@ -22,11 +22,22 @@ h2 { font-size: 1.15rem; margin: 22px 0 8px; }
   background: var(--card); border: 2px solid var(--line); border-radius: 12px;
   box-shadow: 0 3px 0 var(--line); cursor: pointer;
 }
-.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+/* Pressed look comes from a class set on pointer down and cleared on release (main.js), because touch browsers can leave :active stuck on the last tapped button. */
+.btn.pressed:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
 .btn.primary { background: var(--accent); border-color: #c07f00; box-shadow: 0 3px 0 #c07f00; color: var(--accent-ink); }
 .btn.big { min-height: 64px; font-size: 1.15rem; }
-.btn:disabled { opacity: 0.55; cursor: default; }
+/* Disabled stays readable: no fading, just a flat dashed card in the muted ink (>= 4.5:1 in every look). */
+.btn:disabled, .btn.primary:disabled {
+  opacity: 1; cursor: default; color: var(--muted); background: var(--card);
+  border: 2px dashed var(--line); box-shadow: none; transform: none;
+}
+/* No browser tap tint on any control; keyboard focus keeps a visible ring, a tap leaves none. */
+button, a, input, textarea, [role=button] { -webkit-tap-highlight-color: transparent; }
+.btn:focus:not(:focus-visible), input:focus:not(:focus-visible), textarea:focus:not(:focus-visible) { outline: none; }
 .btn:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid #1b6fd1; outline-offset: 2px; }
+.goal-label, .goal-need { display: block; }
+.goal-need { font-size: 0.9rem; font-weight: 600; margin-top: 2px; }
+.goal-need:empty { display: none; }
 
 input[type=text], textarea {
   width: 100%; font: inherit; color: var(--ink); background: #fff; padding: 10px 12px;
@@ -80,6 +91,7 @@ body.space {
 body.space .banner { background: #232c70; }
 body.space .banner.rush { background: #5a3a1a; border-color: #ffb060; }
 body.space .btn.primary { border-color: #c79a00; box-shadow: 0 3px 0 #c79a00; }
+body.space .btn.primary:disabled { border-color: var(--line); box-shadow: none; }
 body.space input[type=text], body.space textarea { background: #0f1540; }
 body.space .panel-card { background: var(--card); }
 
@@ -115,7 +127,7 @@ body.space .panel-card { background: var(--card); }
 .rocket svg { display: block; }
 @keyframes shake { from { transform: translateX(-2px); } to { transform: translateX(2px); } }
 @keyframes lift { from { transform: translateY(0); } to { transform: translateY(-120vh); } }
-.flame { position: absolute; left: 50%; top: 96%; width: 26px; height: 58px; margin-left: -13px; border-radius: 50% 50% 50% 50% / 20% 20% 80% 80%; background: linear-gradient(180deg, #fff6c8, #ffb020 50%, #ff5a20); transform-origin: top; animation: flicker 0.1s linear infinite alternate, flame-in 1.2s ease-out both; }
+.flame { position: absolute; left: 50%; top: 95%; width: 26px; height: 58px; margin-left: -13px; border-radius: 50% 50% 50% 50% / 20% 20% 80% 80%; background: linear-gradient(180deg, #fff6c8, #ffb020 50%, #ff5a20); transform-origin: top; animation: flicker 0.1s linear infinite alternate, flame-in 1.2s ease-out both; }
 @keyframes flicker { from { transform: scaleY(0.8) scaleX(0.9); } to { transform: scaleY(1.15) scaleX(1.05); } }
 @keyframes flame-in { from { opacity: 0; } to { opacity: 1; } }
 .cap { position: absolute; left: 0; right: 0; top: 18%; margin: 0; text-align: center; font-size: 2rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #fff6c8; text-shadow: 0 2px 0 #3a2a00; z-index: 4; opacity: 0; }
@@ -140,3 +152,14 @@ body.space .panel-card { background: var(--card); }
 @media (prefers-reduced-motion: reduce) {
   .overlay *, .overlay { animation-duration: 0.01s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; }
 }
+
+/* ---------- slice 3: Franchise ---------- */
+.franchise { background: radial-gradient(120% 80% at 50% 0%, #2a2470 0%, #0b1030 60%, #04061a 100%); --muted: #aab3ea; --line: #3d46a0; --ink: #f6f2d2; --card: #161d4a; }
+.franchise .stars { opacity: 1; animation: star-fall 8s linear infinite; }
+.franchise .stars.s2 { animation-duration: 11s; }
+.franchise .stars.s3 { animation-duration: 14s; }
+.keep-lose { text-align: left; margin: 14px 0 18px; padding: 10px 14px; border: 2px dashed var(--line); border-radius: 12px; }
+.franchise-badge-art { width: 150px; height: 150px; margin: 0 auto 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 35% 30%, #fff2a8, #ffd23f 60%, #e0a000 100%); border: 4px solid #3a2a00; box-shadow: 0 0 40px 6px rgba(255, 210, 63, 0.4);
+  color: #3a2a00; font-size: 2.6rem; font-weight: 900; animation: pop 0.8s cubic-bezier(.2,1.4,.4,1) both; }
+.franchise-badge { margin: 6px 0 0; text-align: center; font-weight: 700; color: var(--muted); }

@@ -42,6 +42,10 @@ export function validateEnvelope(env) {
   for (const k of ['shop', 'rocket']) { // slice 2 fields; absent in older saves
     if (k in st && typeof st[k] !== 'boolean') throw new Error(`bad ${k}: must be true or false`);
   }
+  // Slice 3 field: Franchises opened. Absent in older saves (means 0).
+  if ('franchises' in st && !(Number.isInteger(st.franchises) && st.franchises >= 0 && st.franchises <= 1e6)) {
+    throw new Error('bad franchises: must be a whole number from 0');
+  }
   if (!Array.isArray(st.upgrades) || st.upgrades.length > 100 || !st.upgrades.every((u) => typeof u === 'string')) {
     throw new Error('bad upgrades');
   }

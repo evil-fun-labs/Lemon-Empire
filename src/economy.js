@@ -28,6 +28,18 @@ export const SHOP_COST = 1200; // cash to expand into a Shop
 export const ROCKET_MILESTONE_UNITS = 10; // Shop producers owned before the rocket can be built
 export const ROCKET_COST = 20000; // cash to build and launch the Lemon Rocket
 
+// Franchise (minimal prestige, docs/brief.md): once the rocket has launched, reaching FRANCHISE_MILESTONE cash
+// offers a reset. Each Franchise multiplies what every cup pays by FRANCHISE_MULT, capped at FRANCHISE_CAP,
+// and the bonus survives later resets. Two Franchises reach the cap (1.5, then 2.0); nothing is offered after.
+export const FRANCHISE_MILESTONE = 50000; // cash needed to open a Franchise (after the rocket launch at 20,000)
+export const FRANCHISE_MULT = 1.5;
+export const FRANCHISE_CAP = 2;
+
+export function franchiseMult(count) {
+  const n = Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
+  return Math.min(FRANCHISE_CAP, Math.pow(FRANCHISE_MULT, n));
+}
+
 // Customer rush: one per run. Start minute = 3 + floor(12 * u2), u2 = first draw of prng("rush", seed)
 // (docs/test-spec.md section 2). Duration and size are constants.
 export const RUSH_MIN_MINUTE = 3;
@@ -59,9 +71,10 @@ export function multipliers(upgradeIds) {
 }
 
 // Income per second at full stock (cash from everything that sells cups), outside a rush.
-export function incomePerSecond(owned, upgradeIds, demand) {
+// `franchises` is the number of Franchises opened; each cup pays franchiseMult(franchises) times as much.
+export function incomePerSecond(owned, upgradeIds, demand, franchises = 0) {
   const m = multipliers(upgradeIds);
   let cups = 0;
   for (const p of PRODUCERS) if (p.makes === 'cups') cups += (owned[p.id] || 0) * p.rate * m.speed;
-  return cups * BASE_PRICE * demand;
+  return cups * BASE_PRICE * demand * franchiseMult(franchises);
 }

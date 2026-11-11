@@ -4,15 +4,20 @@ import {
   PRODUCERS, UPGRADES, START, TICK, STAND_SUGAR, OFFLINE_CAP_S, BASE_PRICE, SELL_TAP_CUPS,
   SHOP_MILESTONE_CUPS, SHOP_COST, ROCKET_MILESTONE_UNITS, ROCKET_COST,
   RUSH_MIN_MINUTE, RUSH_MINUTE_SPAN, RUSH_DURATION_S, RUSH_PRICE_MULT,
+  FRANCHISE_MILESTONE, FRANCHISE_CAP, franchiseMult,
   producerCost, multipliers,
 } from './economy.js';
 
-export const SAVE_FIELDS = ['seed', 'demand', 'ticks', 'cash', 'lemons', 'sugar', 'owned', 'upgrades', 'cupsSold', 'shop', 'rocket'];
+export const SAVE_FIELDS = ['seed', 'demand', 'ticks', 'cash', 'lemons', 'sugar', 'owned', 'upgrades', 'cupsSold', 'shop', 'rocket', 'franchises'];
 const TICKS_PER_S = Math.round(1 / TICK);
 
 export function createGame(seed = 1) {
   let s;
   let acc = 0; // sub-tick remainder, never saved
+  // First-run pace measurement (never saved): how much of the first run's time to the Franchise milestone
+  // is fixed (gate waits and the rush window). See fixedShare() and README "Franchise".
+  let meas;
+  const freshMeas = () => ({ ticks: 0, gate: 0, rush: 0, fixed: 0, done: false, at: 0 });
 
   function reset(newSeed = 1) {
     const u1 = prng('demand', newSeed)();
@@ -28,19 +33,44 @@ export function createGame(seed = 1) {
       upgrades: [],
       cupsSold: 0,
       shop: false, // the stand has been expanded into a Shop
-      rocket: false, // the Lemon Rocket has launched
+      rocket: false, // the Lemon Rocket has launched (kept across a Franchise as the 'seen' flag)
+      franchises: 0, // Franchises opened; permanent
     };
     acc = 0;
+    meas = freshMeas();
     return true;
   }
 
   const rushActive = () => s.ticks >= s.rushStart && s.ticks < s.rushStart + RUSH_DURATION_S * TICKS_PER_S;
-  const price = () => BASE_PRICE * s.demand * (rushActive() ? RUSH_PRICE_MULT : 1);
+  const price = () => BASE_PRICE * s.demand * fMult() * (rushActive() ? RUSH_PRICE_MULT : 1);
   const shopUnits = () => PRODUCERS.reduce((n, p) => n + (p.tier === 2 ? s.owned[p.id] : 0), 0);
   const shopReady = () => !s.shop && s.cupsSold >= SHOP_MILESTONE_CUPS;
   const rocketReady = () => s.shop && !s.rocket && shopUnits() >= ROCKET_MILESTONE_UNITS;
+  const fMult = () => franchiseMult(s.franchises);
+  const franchiseAtCap = () => fMult() >= FRANCHISE_CAP;
+  // Offered after the launch, at the cash milestone, until the multiplier is capped.
+  const franchiseReady = () => s.rocket && !franchiseAtCap() && s.cash >= FRANCHISE_MILESTONE;
+
+  // Record the first run's time to the milestone. A tick is "fixed" when its length does not shrink with a
+  // bigger income multiplier: cash already covers the next gated purchase but its milestone (cups sold for the
+  // Shop, 10 Shop producers for the rocket) is still closed, or the customer rush is running.
+  function measure(gate, rush) {
+    if (s.franchises > 0 || meas.done) return;
+    meas.ticks += 1;
+    if (gate) meas.gate += 1;
+    if (rush) meas.rush += 1;
+    if (gate || rush) meas.fixed += 1;
+  }
+  function markMilestone() {
+    if (s.franchises === 0 && !meas.done && s.rocket && s.cash >= FRANCHISE_MILESTONE) { meas.done = true; meas.at = s.ticks; }
+  }
 
   function tick() {
+    measure(
+      (!s.shop && s.cupsSold < SHOP_MILESTONE_CUPS && s.cash >= SHOP_COST) ||
+        (s.shop && !s.rocket && shopUnits() < ROCKET_MILESTONE_UNITS && s.cash >= ROCKET_COST),
+      rushActive(),
+    );
     const m = multipliers(s.upgrades);
     let lemonRate = 0; let sugarRate = STAND_SUGAR; let cupRate = 0;
     for (const p of PRODUCERS) {
@@ -60,6 +90,7 @@ export function createGame(seed = 1) {
       s.cupsSold += cups;
     }
     s.ticks += 1;
+    markMilestone();
   }
 
   // Spec: advance(seconds) steps in fixed 0.1 s ticks; returns new game time.
@@ -87,6 +118,7 @@ export function createGame(seed = 1) {
     s.sugar -= cups * m.efficiency;
     s.cash += cups * price();
     s.cupsSold += cups;
+    markMilestone();
     return true;
   }
 
@@ -128,13 +160,41 @@ export function createGame(seed = 1) {
     return true;
   }
 
-  function franchise() { return false; } // not in slice 1
+  // The Franchise reset. Restarts the economy (cash, stock, producers, upgrades, cups sold, Shop, game time) and keeps
+  // the seed, demand, the rocket 'seen' flag (so the space look and the reveal stay as they were) and the
+  // Franchise count, whose multiplier is permanent. The rush window is seed-derived, so it comes round again.
+  function franchise() {
+    if (!franchiseReady()) return false;
+    s.franchises += 1;
+    s.ticks = 0;
+    s.cash = START.cash; s.lemons = START.lemons; s.sugar = START.sugar;
+    s.owned = Object.fromEntries(PRODUCERS.map((p) => [p.id, 0]));
+    s.upgrades = [];
+    s.cupsSold = 0;
+    s.shop = false;
+    acc = 0;
+    return true;
+  }
+
+  // Pace measurement for the brief's fixed-share check. Null until a first run (no Franchise yet, played in this
+  // session from time 0) has reached the milestone. seconds are game time; share = fixed / total.
+  function fixedShare() {
+    if (!meas.done || meas.ticks !== meas.at) return null;
+    return {
+      milestone: FRANCHISE_MILESTONE,
+      totalSeconds: meas.ticks * TICK, fixedSeconds: meas.fixed * TICK,
+      gateWaitSeconds: meas.gate * TICK, rushSeconds: meas.rush * TICK,
+      share: meas.fixed / meas.ticks,
+    };
+  }
 
   function view() {
     return {
       ...s, owned: { ...s.owned }, upgrades: [...s.upgrades],
       time: s.ticks * TICK, rocket: s.rocket,
       shopReady: shopReady(), rocketReady: rocketReady(), shopUnits: shopUnits(),
+      franchiseReady: franchiseReady(), franchiseMult: fMult(), franchiseAtCap: franchiseAtCap(),
+      franchiseMilestone: FRANCHISE_MILESTONE,
       rush: {
         start: s.rushStart * TICK, end: (s.rushStart + RUSH_DURATION_S * TICKS_PER_S) * TICK, active: rushActive(),
       },
@@ -154,6 +214,7 @@ export function createGame(seed = 1) {
       time: v.time, seed: v.seed, demand: v.demand, cash: v.cash, lemons: v.lemons, sugar: v.sugar,
       owned: v.owned, upgrades: v.upgrades, available: v.available, rocket: v.rocket,
       shop: v.shop, rush: v.rush,
+      franchises: v.franchises, franchiseMult: v.franchiseMult, franchiseReady: v.franchiseReady,
     });
   }
 
@@ -173,11 +234,15 @@ export function createGame(seed = 1) {
     for (const p of PRODUCERS) s.owned[p.id] = Math.floor(snap.owned[p.id] || 0);
     // Older saves have no shop/rocket fields. Owning Shop producers or a launched rocket implies the Shop.
     s.rocket = snap.rocket === true;
-    s.shop = snap.shop === true || s.rocket || shopUnits() > 0;
+    // Slice 1 saves have no shop flag: owning Shop producers or a launched rocket implies the Shop. From slice 2 on
+    // the flag is always saved, and after a Franchise it is false while the rocket stays launched.
+    s.shop = typeof snap.shop === 'boolean' ? snap.shop : s.rocket || shopUnits() > 0;
+    // Saves from before the Franchise have no count: zero.
+    s.franchises = Number.isInteger(snap.franchises) && snap.franchises > 0 ? snap.franchises : 0;
     s.upgrades = snap.upgrades.filter((id) => UPGRADES.some((u) => u.id === id));
     return true;
   }
 
   reset(seed);
-  return { reset, advance, state, view, buy, click, sell, franchise, snapshot, load, nextCost, availableUpgrades };
+  return { reset, advance, state, view, buy, click, sell, franchise, fixedShare, snapshot, load, nextCost, availableUpgrades };
 }

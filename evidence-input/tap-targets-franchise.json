@@ -1,0 +1,686 @@
+{
+  "viewport": "390x844 dpr3 touch",
+  "total": 95,
+  "under44": [],
+  "targets": {
+    "offerLocked": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-franchise",
+        "text": "Open a Franchiseneed $30.0K mo",
+        "w": 326,
+        "h": 70.3
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (8)$40Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (7)$46Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (6)$99Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Orchard (10)$619Grows lem",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Refinery (4)$357Makes su",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Clerk (4)$892Serves a who",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick SqueezerOwnedSPEED: Prod",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Turbo Juicer$1.50KSPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk DiscountOwnedCOST: Produc",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Wholesale Deal$1.20KCOST: Prod",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      }
+    ],
+    "offer": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-franchise",
+        "text": "Open a Franchise",
+        "w": 326,
+        "h": 64
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (8)$40Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (7)$46Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (6)$99Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Orchard (10)$619Grows lem",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Refinery (4)$357Makes su",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Clerk (4)$892Serves a who",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick SqueezerOwnedSPEED: Prod",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Turbo Juicer$1.50KSPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk DiscountOwnedCOST: Produc",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Wholesale Deal$1.20KCOST: Prod",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      }
+    ],
+    "confirm": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-franchise",
+        "text": "Open a Franchise",
+        "w": 326,
+        "h": 64
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (8)$40Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (7)$46Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (6)$99Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Orchard (10)$619Grows lem",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Refinery (4)$357Makes su",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Clerk (4)$892Serves a who",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick SqueezerOwnedSPEED: Prod",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Turbo Juicer$1.50KSPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk DiscountOwnedCOST: Produc",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Wholesale Deal$1.20KCOST: Prod",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-franchise-confirm",
+        "text": "Open the Franchise",
+        "w": 350,
+        "h": 64
+      },
+      {
+        "tag": "button",
+        "id": "btn-franchise-cancel",
+        "text": "Not yet",
+        "w": 350,
+        "h": 64
+      }
+    ],
+    "reveal": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-franchise",
+        "text": "Open a Franchiseneed $50.0K mo",
+        "w": 326,
+        "h": 70.3
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (0)$15Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (0)$20Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (0)$50Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick Squeezer$120SPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk Discount$100COST: Produce",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-franchise-continue",
+        "text": "Start the next run",
+        "w": 350,
+        "h": 64
+      }
+    ],
+    "secondRunTop": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-franchise",
+        "text": "Open a Franchiseneed $50.0K mo",
+        "w": 326,
+        "h": 70.3
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (1)$18Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (1)$23Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (0)$50Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick Squeezer$120SPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk Discount$100COST: Produce",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      }
+    ],
+    "secondRunBottom": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-franchise",
+        "text": "Open a Franchiseneed $50.0K mo",
+        "w": 326,
+        "h": 70.3
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (1)$18Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (1)$23Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (0)$50Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick Squeezer$120SPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk Discount$100COST: Produce",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      }
+    ],
+    "revealCap": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (0)$15Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (0)$20Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (0)$50Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick Squeezer$120SPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk Discount$100COST: Produce",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-franchise-continue",
+        "text": "Start the next run",
+        "w": 350,
+        "h": 64
+      }
+    ]
+  }
+}
