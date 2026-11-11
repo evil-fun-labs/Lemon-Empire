@@ -33,14 +33,16 @@ Two failed balance passes: stop, return to Jesse.
 - Determinism test: reset(7); advance(600) x2 gives byte-identical state().
 
 ## 5. Save module (single file, save.js)
-`save(profile, state)`, `load(profile)`, `listProfiles()`, `exportProfile(profile)` returns string, `importProfile(str)` validates and throws on bad input. Backend injected (default localStorage). Keys namespaced `lemon:<profile>:save`.
-Fake-backend test (node, in-memory Map): round-trip equality; two profiles do not bleed; keys all start `lemon:`; import rejects non-JSON, wrong version, missing fields, negative or non-numeric cash, oversize (> 1 MB), `__proto__` keys; export then import equals original. Evidence: test runner log, all cases listed pass.
+API from `createSave({ backend, now })`: `put(name, state)`, `get(name)` (null when missing or invalid), `list()`, `exportProfile(name)` returns string, `importProfile(str, { overwrite })` validates and throws on bad input. Backend injected (default localStorage). Keys namespaced `lemon-empire:v1:<name>`; envelope `{ v, name, savedAt, state }`. Profile names are 1 to 32 characters (`MAX_NAME` = 32), no leading or trailing spaces, no control characters.
+Import never silently overwrites. If the name in the file already has a save: the call throws with `code: 'EXISTS'` unless `{ overwrite: true }` is passed (the UI shows a "Replace it" button for that), and it always throws with `code: 'NEWER'` when the existing save's `savedAt` is later than the file's. Importing a new name needs no confirmation.
+Fake-backend test (node, in-memory Map): round-trip equality; two profiles do not bleed; keys all start `lemon-empire:v1:`; import rejects non-JSON, wrong version, missing fields, negative or non-numeric cash, oversize (> 1 MB), `__proto__` keys; export then import equals original; same-name import is refused until confirmed (EXISTS), refused outright when the existing save is newer (NEWER), name limit 32 ok and 33 rejected. Evidence: test runner log, all cases listed pass.
 
 ## 6. Device and markup checks
 - Touch emulation: Chrome DevTools/Playwright Chromium, hasTouch, mobile, DPR 3, 390x844. Evidence: the 5 screenshots (first load, first upgrade choice, shop unlock, launch, 30 s after Franchise) with sha256 each.
 - Tap targets: script queries every button/[role=button]/a/input; getBoundingClientRect >= 44x44 CSS px. Evidence: JSON listing element and size; zero under 44.
 - No hover: `grep -rnE ':hover|mouseover|mouseenter|@media *\(hover' src/` returns nothing. Evidence: empty grep output.
 - WebKit: Playwright WebKit runs the same load, buy, save, reload, import flow; log shows pass and no console errors.
+- Import confirmation: in the panel, importing text whose name already exists shows the message and a "Replace it" button; the existing save is unchanged until that button is tapped.
 - Names via innerHTML: grep for innerHTML/outerHTML/insertAdjacentHTML touching profile names returns nothing; test with name `<img src=x onerror=alert(1)>` renders as literal text and no dialog fires.
 
 ## 7. Evidence per balance pass
