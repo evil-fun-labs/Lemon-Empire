@@ -18,7 +18,7 @@ try { saves = createSave(); localStorage.getItem('x'); } catch { saves = createS
 function memoryBackend() {
   const m = new Map();
   return { get length() { return m.size; }, key: (i) => [...m.keys()][i] ?? null,
-    getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)) };
+    getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => { m.delete(k); } };
 }
 window.__saves = saves;
 
@@ -107,7 +107,7 @@ $('name-form').addEventListener('submit', (e) => {
 });
 
 /* ---------- profile start / offline progress ---------- */
-function startProfile(name) {
+function startProfile(name, { avoidSeed = null } = {}) {
   profile = name;
   feedbackUI.setPlayer(name);
   const env = saves.get(name);
@@ -121,7 +121,9 @@ function startProfile(name) {
       away = { secs, earned: game.view().cash - before };
     }
   } else {
-    game.reset(Math.floor(Math.random() * 1e6) + 1);
+    let seed = Math.floor(Math.random() * 1e6) + 1;
+    while (seed === avoidSeed) seed = Math.floor(Math.random() * 1e6) + 1;
+    game.reset(seed);
   }
   saveNow();
   $('who').textContent = name;
@@ -272,11 +274,35 @@ function openPanel() {
   $('import-text').value = '';
   $('import-msg').textContent = '';
   resetImportConfirm();
+  resetRestartConfirm();
+  $('restart-block').hidden = !profile;
   $('panel').hidden = false;
 }
 $('btn-export').addEventListener('click', openPanel);
 $('open-import-name').addEventListener('click', openPanel);
-$('btn-close').addEventListener('click', () => { $('panel').hidden = true; });
+$('btn-close').addEventListener('click', () => { $('panel').hidden = true; resetRestartConfirm(); });
+
+/* ---------- start over as a new player (two-step confirm; wipes only this profile's save) ---------- */
+function resetRestartConfirm() {
+  $('restart-confirm-box').hidden = true;
+  $('btn-restart').hidden = false;
+}
+$('btn-restart').addEventListener('click', () => {
+  $('btn-restart').hidden = true;
+  $('restart-confirm-box').hidden = false;
+  $('btn-restart-cancel').focus({ preventScroll: true });
+});
+$('btn-restart-cancel').addEventListener('click', resetRestartConfirm);
+$('btn-restart-confirm').addEventListener('click', () => {
+  if (!profile) { resetRestartConfirm(); return; }
+  const name = profile;
+  const oldSeed = game.snapshot().seed;
+  try { saves.remove(name); } catch (e) { $('import-msg').textContent = 'Could not start over: ' + e.message; return; }
+  resetRestartConfirm();
+  $('panel').hidden = true;
+  startProfile(name, { avoidSeed: oldSeed }); // no save left, so this is a brand-new stand under the same name
+  window.scrollTo(0, 0);
+});
 $('btn-copy').addEventListener('click', async () => {
   const t = $('export-text');
   try { await navigator.clipboard.writeText(t.value); $('import-msg').textContent = 'Copied.'; }
