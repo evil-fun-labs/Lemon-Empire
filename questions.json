@@ -1,0 +1,46 @@
+[
+  {
+    "id": "q-first-minutes",
+    "text": "Think about your first two minutes. Was it clear what to tap and what you were trying to do? What, if anything, confused you?",
+    "kind": "text",
+    "when": "any"
+  },
+  {
+    "id": "q-phone-browser",
+    "text": "Which phone and browser are you playing on? (For example: iPhone 13, Safari.)",
+    "kind": "text",
+    "when": "any"
+  },
+  {
+    "id": "q-broken-phone",
+    "text": "Did anything look broken, get cut off, or feel hard to tap on your phone? Tell us what and where.",
+    "kind": "text",
+    "when": "any"
+  },
+  {
+    "id": "q-pace",
+    "text": "How does the speed of the game feel so far?",
+    "kind": "choice",
+    "options": ["Too slow", "A little slow", "About right", "A little fast", "Too fast"],
+    "when": "any"
+  },
+  {
+    "id": "q-upgrade-choice",
+    "text": "When you pick upgrades, does the choice feel like it matters? Is there one you wish you had skipped or bought sooner?",
+    "kind": "text",
+    "when": "any"
+  },
+  {
+    "id": "q-shop-moment",
+    "text": "You opened the Shop. How did that moment feel?",
+    "kind": "choice",
+    "options": ["Exciting", "Nice", "Fine, nothing special", "Confusing", "Disappointing"],
+    "when": "shop"
+  },
+  {
+    "id": "q-rocket-surprise",
+    "text": "The rocket launched. Were you surprised? Did it feel worth the wait? Say what you expected.",
+    "kind": "text",
+    "when": "rocket"
+  }
+]

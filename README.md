@@ -24,6 +24,16 @@ Plain HTML/CSS/JS, no build step. Open `index.html` through any static server (E
 - `node tests/franchise-pace.mjs` measures, over seeds 1-60, the saving-style bot's time to the milestone on run 1 versus run 2 (T2/T1) and the fixed share. It reports; nothing is tuned to it and it does not fail.
 - Polish: the rocket flame is placed on the nozzle (the rocket box now matches the art); the "pressed" look is a class set on pointer down and cleared on release, tap highlight is off and a tap leaves no focus ring (keyboard focus keeps one), for every button including "Replace it"; disabled cards are flat, dashed and in the muted ink (4.5:1 or better in all three looks) instead of faded; the disabled Shop, rocket and Franchise buttons say "need $X more".
 
+## Feedback
+
+A **Feedback** button sits in the sticky header of the game screen, at the bottom of the name screen, and in the top corner of every reveal screen (Shop, launch, teaser, Franchise). It opens a portrait panel with the next unanswered question, a free-form box that is always there, an `unsent: N` indicator, **Export feedback**, and the version. Submitting shows a "Submitted, thanks!" toast and moves to the next question; when none are left it says so and the free-form box stays. The panel does not pause the game clock or touch the save.
+
+- **Adding questions:** edit `questions.json` in the repo root, an array of `{ id, text, kind, options?, when? }`. `id` is unique and never reused (answered ids are remembered by id). `kind` is `text` or `choice` (`choice` needs `options`, 2 to 12 strings). `when` is optional: `any`, or a stage `stand`, `shop`, `rocket`, `franchise`; a stage means "from that stage on" (a `shop` question is still open in space), and a list of stages is allowed. Stage comes from the game: `franchise` after the first Franchise, else `rocket` once launched, else `shop` once opened, else `stand`. Questions are asked in file order. Malformed entries are skipped.
+- **Record format** (one per submission, kept in the queue until a sink delivers it): `{ id, player, questionId, kind, text, version, stage, context, timestamp }`. `kind` is `answer` or `free` (`questionId` is `null` for free). `player` is the profile name (`null` before a name is typed). `version` is `"<package version> b<build> <short hash>"` from `version.json`. `timestamp` is ISO 8601 UTC. `context` is `{ tier (stand|shop|space), stage, owned {id: count}, ownedTotal, upgrades, cash, cupsSold, franchises, minutes, screen (name|game), overlay (null or the reveal id) }`; `minutes` is game time in the current run, which a Franchise restarts. Text is trimmed and cut to 2000 characters; all text is shown with `textContent` only.
+- **Storage:** `lemon-empire:v1:feedback:<name>` holds `{ v, answered: [question ids], queue: [unsent records] }`. The save module reserves names starting with `feedback:` so a profile can never share a key with a queue. Before a name is typed, feedback uses the empty name.
+- **Version:** `npm run stamp` writes `version.json` (`{ version, commit, build }`: package version, short hash of HEAD, commit count on HEAD). There is no build step on Pages, so run it and commit `version.json` before you push; it names the commit it was run on, so it is always one commit behind itself. The version shows small in the footer and in the panel.
+- **Sinks** (all in `src/feedback.js`; a sink is `{ enabled, put(record) -> Promise }`, `put` resolves only once the record is delivered): `LocalSink` only keeps the queue and is the default. `HttpSink(url, fieldMap)` POSTs `application/x-www-form-urlencoded` with `mode: 'no-cors'` and is **a stub, not yet tried against a real Google Form** (the browser cannot read the reply, so a request that went out counts as delivered). To turn it on, put values in `feedback-config.json`: `url` is the form's `https://docs.google.com/forms/d/e/<FORM_ID>/formResponse`, `fieldMap` maps record fields (dotted paths such as `context.cash` work; objects are sent as JSON) to the form's `entry.NNN` field names, e.g. `{ "text": "entry.111", "player": "entry.222", "version": "entry.333" }`. The sink stays off unless `url` is https and `fieldMap` is not empty. Unsent records are retried each time the panel opens and after each submit; a record leaves the queue only after `put` resolves. Without a sink, use **Export feedback** (JSON text) so nothing is lost.
+
 ## Economy
 
 All placeholders, untuned. Everything lives in `src/economy.js`.
@@ -58,7 +68,10 @@ node tests/device-reveal.test.cjs
 node tests/franchise.test.js
 node tests/device-franchise.test.cjs
 node tests/device-polish.test.cjs
+node tests/feedback.test.js
+node tests/stamp.test.js
+node tests/device-feedback.test.cjs
 node tests/franchise-pace.mjs   # measurement, prints the pace ratio and fixed share
 ```
 
-Or all at once: `npm test`. The device tests write portrait screenshots and tap-target JSON to `evidence-input/` (slice 2: 05-shop-unlock, 06-launch, 07-post-launch-teaser, 08-post-launch-game; slice 3: 09-franchise-offer, 10-franchise-reveal, 11-second-run-30s, plus 12 to 15 for the polish fixes).
+Or all at once: `npm test`. The device tests write portrait screenshots and tap-target JSON to `evidence-input/` (slice 2: 05-shop-unlock, 06-launch, 07-post-launch-teaser, 08-post-launch-game; slice 3: 09-franchise-offer, 10-franchise-reveal, 11-second-run-30s, plus 12 to 15 for the polish fixes; feedback: 16 to 24 and `tap-targets-feedback.json`).
