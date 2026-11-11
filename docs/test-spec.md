@@ -2,12 +2,17 @@
 Thresholds copied from the brief.
 
 ## 1. Bots (all play through the game-clock hook, never wall time)
-- SPEED: always buys the affordable upgrade with highest income-per-second gain per purchase; ties by upgrade id.
-- EFFICIENCY: buys the affordable upgrade with highest (income gain / cost); ties by id.
-- COST: buys the cheapest affordable upgrade; ties by id.
-- MIXED: SPEED until shop unlock, then EFFICIENCY.
-- RANDOM: uniform random among currently affordable upgrades; RNG seed = 7000 + seed index (fixed, logged).
-- NOVICE: clicks every 1.0 s of game time (fixed cadence), reaction delay 2.0 s before acting on a newly affordable upgrade, buys the cheapest affordable upgrade; no lookahead.
+Pass 1 text (superseded for SPEED, EFFICIENCY, COST, MIXED and RANDOM by the pass-2 plan rule below, kept for the record): SPEED bought the affordable upgrade with the highest income gain, EFFICIENCY the highest gain/cost, COST the cheapest, MIXED SPEED until shop unlock then EFFICIENCY, RANDOM uniform among affordable (seed 7000 + seed index).
+
+### Pass 2 bot rules (docs/balance/pass-2-ruling.md and pass-2-declaration.md govern; this section restates them)
+- Plan rule (target, wait, buy, resume) for SPEED, EFFICIENCY, COST, MIXED and RANDOM: candidates are every unlocked producer and upgrade not excluded by the one-tier-2 rule, priced or not (a tier-2 upgrade once its tier 1 is owned). Target: SPEED = largest income/s gain (pass-1 gain function, which now includes Zesty Recipe's cash multiplier); EFFICIENCY = largest gain per cost; COST = lowest cost; ties by id. Affordable: buy after the decision latency. Unaffordable: wait, buying nothing else (clicking continues). Retarget only when the target is bought or stops being a candidate (another tier-2 taken, Franchise). No time cap, no mid-wait re-evaluation.
+- MIXED: SPEED rule until the game's shop flag is set, then EFFICIENCY; a wait in progress at the switch is dropped, bought items stand.
+- RANDOM: same rule and latency on a uniformly random target (candidates sorted by id), stream prng("random", 7000 + seed index).
+- Milestone goals (build decision, not in the declaration text; pass 1 already did this): the Shop and the rocket are goals, not scored items. When one is on offer at a retarget, SPEED, EFFICIENCY, COST and MIXED take it as their target. RANDOM counts them as two more candidates. Without this no planning bot could ever launch.
+- Decision latency, every planning bot: 1.0 s game time, lognormal noise CV 0.10, stream prng("bot", botname, seed). Only 1.0 s gates. The runner also prints criterion 1 at 0.1 s, 1.0 s and 2.0 s (information only; balance-results/pass-2-sensitivity.csv).
+- NOVICE unchanged: taps every 1.0 s, 2.0 s reaction delay, cheapest affordable, saves for an offered Shop or rocket as in pass 1, no plan.
+- Economy under test: one tier-2 upgrade per run, exclusive, reset by a Franchise. Zesty Recipe $1500, +30% cash per cup. Turbo Juicer $2500, producers x1.6 again. Wholesale Deal $1200, producers 60% off in all (with Bulk Discount) and the Shop 60% off; tier-2 upgrades and the rocket are not discounted.
+- Counting: criterion 5 counts the six upgrades; the counter code is unchanged from pass 1. The 90% limit is per upgrade (no single tier-2 in more than 270 of 300 runs). The runner also reports per-upgrade rates pooled and per bot and the tier-2 slot-taken rate.
 
 ## 2. Seeds, noise, ties
 - 60 seeds, 1..60. Seed s fixes: starting demand roll d = 0.8 + 0.4*u1, u1 = first draw of PRNG("demand", s); customer-rush start minute = 3 + floor(12*u2), u2 = first draw of PRNG("rush", s), rush duration and size are constants. Nothing else is random.

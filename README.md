@@ -48,9 +48,18 @@ All placeholders, untuned. Everything lives in `src/economy.js`.
 | Rocket milestone | own 10 Shop producers, then $20,000 to build and launch |
 | Franchise | offered after launch at $50,000 cash; x1.5 per Franchise on cup price, cap x2 |
 | Customer rush | once per run, 60 s, every cup pays 2x |
-| Upgrades | unchanged from slice 1 (speed, efficiency, cost, two tiers each); they also apply to Shop producers |
+| Upgrades, tier 1 | Quick Squeezer $120 (producers 1.5x), Thrifty Recipe $120 (cups use 25% less), Bulk Discount $100 (producers 15% cheaper) |
+| Upgrades, tier 2 (balance pass 2) | ONE per run, exclusive, reset by a Franchise. Turbo Juicer $2,500 (producers 1.6x again), Zesty Recipe $1,500 (every cup pays +30%, stacks with rush and Franchise), Wholesale Deal $1,200 (with Bulk Discount, producers 60% cheaper in all, and the Shop 60% cheaper; tier-2 upgrades and the rocket keep their price) |
 
 Rough pacing (placeholder check, not a balance pass): a player who saves for each milestone reaches the Shop at about 6-9 min and the rocket at about 22-32 min on seeds 1-8. A bot that always buys the cheapest affordable item and never saves reaches the Shop at about 17-24 min and the rocket at about 55-76 min, because milestones are rarely the cheapest item. Whether test-spec bots should save for milestones is for QA to decide.
+
+## Saves and the one-tier-2 rule
+
+Balance pass 2 allows one tier-2 upgrade (Turbo Juicer, Zesty Recipe, Wholesale Deal) per run. Once one is owned, the other two cards stay visible, disabled, with the line "Locked: you already picked X this run...", and `buy()` refuses them. A Franchise clears upgrades, so each run is a fresh pick. Save format is unchanged (`upgrades` is still a list of ids). An older save that owns two or three tier-2 upgrades is repaired when it loads: the first by cost order is kept (cheapest first, so Wholesale Deal, then Zesty Recipe, then Turbo Juicer; ties by id), the others are dropped, and nothing is refunded. Tier-1 upgrades are always kept. Zesty Recipe's effect changed from fewer inputs per cup to +30% cash per cup, so an old save that owned it simply gets the new effect.
+
+## Balance pass
+
+`node tests/balance/run.mjs 2` plays the 60 paired seeds with every bot and writes `balance-results/pass-2.json`, `.csv` and `pass-2-sensitivity.csv`. Rules: `docs/balance/`, `docs/test-spec.md` section 1, `tests/bots/README.md`.
 
 ## Run the tests
 
@@ -71,6 +80,9 @@ node tests/device-polish.test.cjs
 node tests/feedback.test.js
 node tests/stamp.test.js
 node tests/device-feedback.test.cjs
+node tests/device-tier2.test.cjs
+node tests/balance/plan.test.js
+node tests/balance/determinism.test.js
 node tests/franchise-pace.mjs   # measurement, prints the pace ratio and fixed share
 ```
 

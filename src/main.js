@@ -5,7 +5,7 @@ import { fmt } from './format.js';
 import { initFeedback } from './feedback-ui.js';
 import {
   PRODUCERS, UPGRADES, OFFLINE_CAP_S, incomePerSecond, multipliers,
-  SHOP_MILESTONE_CUPS, SHOP_COST, ROCKET_MILESTONE_UNITS, ROCKET_COST, RUSH_PRICE_MULT,
+  SHOP_MILESTONE_CUPS, ROCKET_MILESTONE_UNITS, ROCKET_COST, RUSH_PRICE_MULT,
   FRANCHISE_MILESTONE, FRANCHISE_CAP,
 } from './economy.js';
 
@@ -157,13 +157,18 @@ function itemButton(id, name, kindText, desc, onBuy) {
   return b;
 }
 
+// Tier-2 upgrades are one pick per run (balance pass 2): the card says so before the pick and, once one is taken,
+// the other two stay visible but disabled with a plain line saying why.
+function upgradeDesc(u) {
+  return `${u.kind.toUpperCase()}: ${u.desc}` + (u.tier === 2 ? '. Pick one of the three big upgrades per run.' : '');
+}
 function buildLists() {
   const pl = $('producers'); pl.replaceChildren();
   const sl = $('shop-producers'); sl.replaceChildren();
   for (const p of PRODUCERS) (p.tier === 2 ? sl : pl).appendChild(itemButton(p.id, p.name, '', '', () => game.buy(p.id)));
   const ul = $('upgrades'); ul.replaceChildren();
   for (const u of UPGRADES) {
-    const b = itemButton(u.id, u.name, u.kind, `${u.kind.toUpperCase()}: ${u.desc}`, () => game.buy(u.id));
+    const b = itemButton(u.id, u.name, u.kind, upgradeDesc(u), () => game.buy(u.id));
     ul.appendChild(b);
   }
 }
@@ -186,7 +191,7 @@ function render(force) {
     ? `Your stand sold ${fmt(v.cupsSold)} cups. Time to grow!`
     : `Sell ${SHOP_MILESTONE_CUPS} cups to unlock a Shop: ${Math.floor(v.cupsSold)} of ${SHOP_MILESTONE_CUPS} so far.`;
   $('btn-shop').hidden = !v.shopReady;
-  setGoalButton($('btn-shop'), `Expand into a Shop for ${money(SHOP_COST)}`, SHOP_COST, v.cash);
+  setGoalButton($('btn-shop'), `Expand into a Shop for ${money(v.shopCost)}`, v.shopCost, v.cash);
   $('shop-section').hidden = !v.shop;
   $('rocket-offer').hidden = !v.shop || v.rocket;
   $('rocket-progress').textContent = v.rocketReady
@@ -217,14 +222,18 @@ function render(force) {
     e.d.textContent = `${p.blurb}, ${rate.toFixed(2)} ${p.unit} each`;
     e.b.disabled = v.cash < game.nextCost(p.id);
   }
-  const avail = new Set(game.availableUpgrades().map((u) => u.id));
+  const taken = UPGRADES.find((u) => u.tier === 2 && v.upgrades.includes(u.id));
   for (const u of UPGRADES) {
     const e = itemEls[u.id]; if (!e) continue;
     const owned = v.upgrades.includes(u.id);
-    const locked = !owned && !avail.has(u.id);
+    const locked = !owned && !!u.requires && !v.upgrades.includes(u.requires);
+    const blocked = !owned && !locked && u.tier === 2 && !!taken;
     e.b.hidden = locked;
-    e.c.textContent = owned ? 'Owned' : money(u.cost);
-    e.b.disabled = owned || v.cash < u.cost;
+    e.c.textContent = owned ? 'Owned' : blocked ? 'Not this run' : money(u.cost);
+    e.d.textContent = blocked
+      ? `Locked: you already picked ${taken.name} this run. Only one big upgrade per run; a Franchise lets you pick again.`
+      : upgradeDesc(u);
+    e.b.disabled = owned || blocked || v.cash < u.cost;
   }
 }
 

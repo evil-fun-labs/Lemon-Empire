@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { createGame } from '../../src/sim.js';
 import { prng } from '../../src/rng.js';
-import { makeBot, BOT_NAMES, PURE_STYLES, NOISE_CV, CLICK_PERIOD_S, isUpgrade } from '../bots/bots.js';
+import { makeBot, BOT_NAMES, PURE_STYLES, NOISE_CV, CLICK_PERIOD_S, PLAN_LATENCY_S, isUpgrade } from '../bots/bots.js';
 import { UPGRADES } from '../../src/economy.js';
 
 export const TICK_S = 0.1;
@@ -23,24 +23,37 @@ export function noiseStream(botName, seed, cv = NOISE_CV) {
 
 // Plays one run. until 'rocket': stop at launch. until 'franchise' (NOVICE only): continue to 50,000 cash,
 // open the Franchise, play to 50,000 again.
-export function playRun(botName, seed, until = 'rocket') {
+// `latency` is the decision latency of the planning bots (seconds of game time); only 1.0 gates (pass-2 declaration),
+// 0.1 and 2.0 feed the information-only sensitivity table. NOVICE ignores it (fixed 2.0 s reaction delay).
+export function playRun(botName, seed, until = 'rocket', latency = PLAN_LATENCY_S) {
   const g = createGame(seed);
-  const bot = makeBot(botName);
+  const bot = makeBot(botName, latency);
   const noise = noiseStream(botName, seed);
   const rng = botName === 'RANDOM' ? prng('random', 7000 + seed) : null; // spec: RNG seed = 7000 + seed index
   const clickEvery = Math.round(CLICK_PERIOD_S / TICK_S);
   const maxSteps = Math.round(LIMIT_S / TICK_S);
   const purchases = []; // [id, game seconds]
   let pending = null; let rocketAt = null; let t1 = null; let t2 = null; let fixed = null; let runStart = 0;
-  let step = 0;
+  let step = 0; let target = null; let ruleKey = null; // plan state (planning bots only)
   for (; step < maxSteps; step++) {
     if (step % clickEvery === 0) { g.click(); g.sell(); }
     const v = g.view();
-    const cands = bot.candidates(v);
+    let cands; let planned = null;
+    if (bot.plan) {
+      // target, wait, buy, resume (pass-2 declaration, plan rule). Drop the target only when it is no longer a
+      // candidate or the bot switches rule (MIXED); never re-evaluate a target that is still valid.
+      const rk = bot.ruleKey(v);
+      if (target !== null && (rk !== ruleKey || !bot.stillCandidate(target, v))) { target = null; pending = null; }
+      if (target === null) { target = bot.chooseTarget(v, rng); ruleKey = rk; pending = null; }
+      const cost = target === null ? null : v.available.find((a) => a.id === target).cost;
+      cands = target !== null && cost <= v.cash ? [target] : []; // unaffordable: wait, buy nothing else
+      planned = target;
+    } else cands = bot.candidates(v);
     if (!cands.length) pending = null;
     else if (pending === null) pending = v.ticks + Math.max(1, Math.round((bot.delay * noise()) / TICK_S));
     if (pending !== null && v.ticks >= pending) {
-      const id = bot.pick(cands, v, rng);
+      const id = bot.plan ? planned : bot.pick(cands, v, rng);
+      if (bot.plan) target = null;
       if (g.buy(id)) { if (rocketAt === null) purchases.push([id, +g.view().time.toFixed(1)]); }
       pending = null;
       if (rocketAt === null && g.view().rocket) {
@@ -53,7 +66,7 @@ export function playRun(botName, seed, until = 'rocket') {
       if (t1 === null) {
         t1 = now - runStart; fixed = g.fixedShare();
         if (!g.franchise()) throw new Error('franchise refused');
-        runStart = g.view().time; pending = null;
+        runStart = g.view().time; pending = null; target = null;
       } else { t2 = now - runStart; break; }
     }
     g.advance(TICK_S);
@@ -65,12 +78,34 @@ export function playRun(botName, seed, until = 'rocket') {
   };
 }
 
-export function runAll(seeds = SEEDS, bots = BOT_NAMES) {
+export function runAll(seeds = SEEDS, bots = BOT_NAMES, latency = PLAN_LATENCY_S) {
   const runs = [];
   for (const seed of seeds) {
-    for (const b of bots) runs.push(playRun(b, seed, b === 'NOVICE' ? 'franchise' : 'rocket'));
+    for (const b of bots) runs.push(playRun(b, seed, b === 'NOVICE' ? 'franchise' : 'rocket', latency));
   }
   return runs;
+}
+
+// Criterion 1 (win share, 2% tie rule) from per-seed pure-style times. Used by evaluate() and the sensitivity table.
+export function winShareOf(times, n = times.SPEED.length) {
+  const wins = { SPEED: 0, EFFICIENCY: 0, COST: 0 };
+  for (let i = 0; i < n; i++) {
+    const m = Math.min(...PURE_STYLES.map((b) => times[b][i]));
+    const w = PURE_STYLES.filter((b) => times[b][i] <= m * 1.02);
+    for (const b of w) wins[b] += 1 / w.length;
+  }
+  return wins;
+}
+
+// Information only (pass-2 declaration): criterion 1 at 0.1 s, 1.0 s and 2.0 s planning latency. Only 1.0 s gates.
+export const SENSITIVITY_LATENCIES = [0.1, 1.0, 2.0];
+export function sensitivity(seeds = SEEDS) {
+  return SENSITIVITY_LATENCIES.map((latency) => {
+    const times = Object.fromEntries(PURE_STYLES.map((b) => [b, seeds.map((sd) => playRun(b, sd, 'rocket', latency).rocket)]));
+    const wins = winShareOf(times, seeds.length);
+    const means = Object.fromEntries(PURE_STYLES.map((b) => [b, mean(times[b])]));
+    return { latency, times, wins, means, spread: Math.max(...Object.values(means)) / Math.min(...Object.values(means)), pass: PURE_STYLES.every((b) => wins[b] >= 0.2 * seeds.length - 1e-9) };
+  });
 }
 
 // ---------- statistics ----------
@@ -85,12 +120,7 @@ export function evaluate(runs, seeds = SEEDS) {
   const out = {};
 
   // 1. win share, tie rule: pure styles within 2% of the minimum split the win equally.
-  const wins = { SPEED: 0, EFFICIENCY: 0, COST: 0 };
-  for (let i = 0; i < n; i++) {
-    const m = Math.min(...PURE_STYLES.map((b) => times[b][i]));
-    const w = PURE_STYLES.filter((b) => times[b][i] <= m * 1.02);
-    for (const b of w) wins[b] += 1 / w.length;
-  }
+  const wins = winShareOf(times, n);
   const need = 0.2 * n;
   out.winShare = { wins, shares: Object.fromEntries(PURE_STYLES.map((b) => [b, wins[b] / n])), need, pass: PURE_STYLES.every((b) => wins[b] >= need - 1e-9) };
 
@@ -123,6 +153,16 @@ export function evaluate(runs, seeds = SEEDS) {
     perBot: Object.fromEntries(pool.map((b) => [b, rate([b], isUpgrade)])),
     allItemsPooled: rate(pool, () => true),
   };
+  // Pass 2 reporting (added; the counter above is unchanged): all six upgrades for every bot including zeros, plus
+  // the tier-2 slot-taken rate (any tier-2 bought in the run, at any purchase index, and after the first 3).
+  const tier2 = UPGRADES.filter((u) => u.tier === 2).map((u) => u.id);
+  const six = (botList) => { const r = rate(botList, isUpgrade); return Object.fromEntries(UPGRADES.map((u) => [u.id, r[u.id] || 0])); };
+  const slot = (botList) => { const rs = runs.filter((r) => botList.includes(r.bot) && seeds.includes(r.seed));
+    return { anyIndex: rs.filter((r) => r.purchases.some(([x]) => tier2.includes(x))).length / rs.length, afterFirst3: rs.filter((r) => r.purchases.slice(3).some(([x]) => tier2.includes(x))).length / rs.length }; };
+  out.concentration.perBotAllSix = Object.fromEntries([...pool, 'RANDOM'].map((b) => [b, six([b])]));
+  out.concentration.pooledAllSix = six(pool);
+  out.concentration.tier2SlotTaken = { pooled: slot(pool), ...Object.fromEntries([...pool, 'RANDOM'].map((b) => [b, slot([b])])) };
+  out.concentration.tier2MaxRuns = Math.max(...tier2.map((id) => out.concentration.upgradeRates[id])) * out.concentration.pooledRuns;
 
   // 5. NOVICE timing.
   const nv = times.NOVICE;

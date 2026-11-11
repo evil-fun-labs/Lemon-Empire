@@ -2,10 +2,10 @@
 import { prng } from './rng.js';
 import {
   PRODUCERS, UPGRADES, START, TICK, STAND_SUGAR, OFFLINE_CAP_S, BASE_PRICE, SELL_TAP_CUPS,
-  SHOP_MILESTONE_CUPS, SHOP_COST, ROCKET_MILESTONE_UNITS, ROCKET_COST,
+  SHOP_MILESTONE_CUPS, ROCKET_MILESTONE_UNITS, ROCKET_COST,
   RUSH_MIN_MINUTE, RUSH_MINUTE_SPAN, RUSH_DURATION_S, RUSH_PRICE_MULT,
   FRANCHISE_MILESTONE, FRANCHISE_CAP, franchiseMult,
-  producerCost, multipliers,
+  producerCost, multipliers, shopCost, enforceOneTier2, tier2Taken,
 } from './economy.js';
 
 export const SAVE_FIELDS = ['seed', 'demand', 'ticks', 'cash', 'lemons', 'sugar', 'owned', 'upgrades', 'cupsSold', 'shop', 'rocket', 'franchises'];
@@ -42,7 +42,7 @@ export function createGame(seed = 1) {
   }
 
   const rushActive = () => s.ticks >= s.rushStart && s.ticks < s.rushStart + RUSH_DURATION_S * TICKS_PER_S;
-  const price = () => BASE_PRICE * s.demand * fMult() * (rushActive() ? RUSH_PRICE_MULT : 1);
+  const price = () => BASE_PRICE * s.demand * fMult() * multipliers(s.upgrades).cash * (rushActive() ? RUSH_PRICE_MULT : 1);
   const shopUnits = () => PRODUCERS.reduce((n, p) => n + (p.tier === 2 ? s.owned[p.id] : 0), 0);
   const shopReady = () => !s.shop && s.cupsSold >= SHOP_MILESTONE_CUPS;
   const rocketReady = () => s.shop && !s.rocket && shopUnits() >= ROCKET_MILESTONE_UNITS;
@@ -67,7 +67,7 @@ export function createGame(seed = 1) {
 
   function tick() {
     measure(
-      (!s.shop && s.cupsSold < SHOP_MILESTONE_CUPS && s.cash >= SHOP_COST) ||
+      (!s.shop && s.cupsSold < SHOP_MILESTONE_CUPS && s.cash >= shopCost(s.upgrades)) ||
         (s.shop && !s.rocket && shopUnits() < ROCKET_MILESTONE_UNITS && s.cash >= ROCKET_COST),
       rushActive(),
     );
@@ -128,13 +128,16 @@ export function createGame(seed = 1) {
   }
 
   function availableUpgrades() {
-    return UPGRADES.filter((u) => !s.upgrades.includes(u.id) && (!u.requires || s.upgrades.includes(u.requires)));
+    // One tier-2 upgrade per run: once any is owned, the other two are not offered (balance pass 2).
+    const slotTaken = tier2Taken(s.upgrades);
+    return UPGRADES.filter((u) => !s.upgrades.includes(u.id) && (!u.requires || s.upgrades.includes(u.requires)) && !(u.tier === 2 && slotTaken));
   }
 
   function buy(id) {
     if (id === 'shop') {
-      if (!shopReady() || s.cash < SHOP_COST) return false;
-      s.cash -= SHOP_COST;
+      const sc = shopCost(s.upgrades);
+      if (!shopReady() || s.cash < sc) return false;
+      s.cash -= sc;
       s.shop = true;
       return true;
     }
@@ -194,12 +197,12 @@ export function createGame(seed = 1) {
       time: s.ticks * TICK, rocket: s.rocket,
       shopReady: shopReady(), rocketReady: rocketReady(), shopUnits: shopUnits(),
       franchiseReady: franchiseReady(), franchiseMult: fMult(), franchiseAtCap: franchiseAtCap(),
-      franchiseMilestone: FRANCHISE_MILESTONE,
+      franchiseMilestone: FRANCHISE_MILESTONE, shopCost: shopCost(s.upgrades), tier2Taken: tier2Taken(s.upgrades),
       rush: {
         start: s.rushStart * TICK, end: (s.rushStart + RUSH_DURATION_S * TICKS_PER_S) * TICK, active: rushActive(),
       },
       available: [
-        ...(shopReady() ? [{ id: 'shop', cost: SHOP_COST }] : []),
+        ...(shopReady() ? [{ id: 'shop', cost: shopCost(s.upgrades) }] : []),
         ...(rocketReady() ? [{ id: 'rocket', cost: ROCKET_COST }] : []),
         ...PRODUCERS.filter((p) => p.tier === 1 || s.shop).map((p) => ({ id: p.id, cost: nextCost(p.id) })),
         ...availableUpgrades().map((u) => ({ id: u.id, cost: u.cost })),
@@ -239,7 +242,9 @@ export function createGame(seed = 1) {
     s.shop = typeof snap.shop === 'boolean' ? snap.shop : s.rocket || shopUnits() > 0;
     // Saves from before the Franchise have no count: zero.
     s.franchises = Number.isInteger(snap.franchises) && snap.franchises > 0 ? snap.franchises : 0;
-    s.upgrades = snap.upgrades.filter((id) => UPGRADES.some((u) => u.id === id));
+    // Unknown ids are dropped. Saves from before balance pass 2 may own two or three tier-2 upgrades: keep the
+    // first by cost order (cheapest, ties by id), refund nothing (see README "Saves and the one-tier-2 rule").
+    s.upgrades = enforceOneTier2(snap.upgrades.filter((id) => UPGRADES.some((u) => u.id === id)));
     return true;
   }
 

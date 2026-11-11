@@ -31,3 +31,7 @@ Other choices the spec leaves open (also QA's to confirm):
 - Non-novice bots get a 1.0 s base decision latency (the spec gives none); the noise applies to it.
 - Pure styles within 2% of the fastest time split the win; unfinished runs (4 h limit) would count as the limit time.
 - Criterion 6 (Franchise) is played by NOVICE per spec 3.7; the saver bot from `tests/franchise-pace.mjs` is run too and reported as 6b.
+
+## Pass 2 (docs/balance/pass-2-declaration.md)
+
+SPEED, EFFICIENCY, COST, MIXED and RANDOM now follow the plan rule (target, wait, buy, resume) in `makePlanBot`; the runner (`playRun`) holds the target. The table above and the "Deviation" section describe pass 1; only NOVICE is unchanged. Latency is 1.0 s for every planning bot (RANDOM included); `makeBot(name, latency)` takes another value only for the information-only sensitivity table. Shop and rocket are goals (see docs/test-spec.md section 1).
