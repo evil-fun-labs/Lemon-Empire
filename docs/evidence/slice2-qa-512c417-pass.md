@@ -1,0 +1,12 @@
+date: 2026-11-10
+tested: Lemon Empire slice 2 independent verification: npm test, real-tap play-through (shop, rocket, launch, teaser, reload), softlock hunt, slice-1 save compat, fuzz, pacing, tap targets, no-hover, reduced motion
+version: 512c417 (branch build/slice-2, base 6d6dcd1)
+result: pass
+raw: npm test exit 0, passed/failed: save 29/0, clock 11/0, economy 15/0, softlock 4/0, format 7/0, shop 10/0, rush 9/0, nohover 2/0, device 22/0, device-reveal 41/0. pw.cjs A (shotsA/run.log): 390x844 DPR3 touch, UI taps only, seed-random profile, Shop at 15.0 min, rocket launch at 48.2 min (greedy buyer), reload resumes rocket=true shop=true space look, overlays not replayed, owned/upgrades equal, console errors []. pw.cjs B: reload mid-reveal and mid-launch both resume, cash unchanged, errors []. soft.mjs: 300 random-order runs 0 stuck, 7 targeted orders all reach rocket. t47.cjs: slice-1 envelope (2050b4a, 25/23/16 producers, 3 upgrades, cash 364.45) resumes identical; tap targets 0 under 44x44 in 4 game states and 3 overlays; hover css rules 0, grep empty; innerHTML grep 0. fuzz.mjs: 192 hostile envelopes 134 rejected, 58 accepted, 4 accepted non-finite (demand 1e308, owned 1e308 x3), 2 of those identical on slice 1; UI shows no NaN text; random sim fuzz 20x3000 ops 0 bad. pace.mjs 60 seeds: saver median Shop 7.6 min, rocket 26.5 (21.1-32.7); NOVICE literal cheapest-of-everything median Shop 22.0, rocket 64.4 (52.7-78.7), fails spec 6; NOVICE that saves for an on-screen goal median Shop 7.9, rocket 27.3 (21.7-34.1). Shots viewed: shotsA 02,03,04b,05,06,07a,07b,07d,08,10,10b; shotsC launch-reduce. sha256 prefixes: 03 8f630f0adb003426, 07b 611f7b7f8abd9b0e, 08 4ea780089599d7ec, 10 553fdd07a16a74a2.
+depends-on: src/sim.js src/economy.js src/save.js src/format.js src/main.js src/style.css index.html
+model: unknown
+checked-by: QA role (did not author the build)
+
+Declared before the work (PLAN.md in this folder): T1 npm test counts; T2 real-tap play-through with viewed screenshots; T3 softlock/reload mid-reveal and mid-launch; T4 slice-1 save compat; T5 NaN/negative fuzz with new fields; T6 pacing both players; T7 tap targets, no-hover, reduced motion.
+Result is pass for the build as shipped to the checks above. Pacing criterion 6 for the spec NOVICE fails as spec'd (64 min); that is a bot-spec issue, see report. Cosmetic findings: detached rocket flame, sticky Sell tint.
+Notes: npm test rewrites evidence-input/*.png; restored with git checkout, tree clean.
