@@ -2,6 +2,7 @@
 import { createGame } from './sim.js';
 import { createSave, validName } from './save.js';
 import { fmt } from './format.js';
+import { initFeedback } from './feedback-ui.js';
 import {
   PRODUCERS, UPGRADES, OFFLINE_CAP_S, incomePerSecond, multipliers,
   SHOP_MILESTONE_CUPS, SHOP_COST, ROCKET_MILESTONE_UNITS, ROCKET_COST, RUSH_PRICE_MULT,
@@ -22,6 +23,11 @@ function memoryBackend() {
 window.__saves = saves;
 
 let profile = null;
+const feedbackUI = initFeedback({
+  getView: () => (profile ? game.view() : null),
+  getWhere: () => ({ screen: profile ? 'game' : 'name', overlay: currentOverlay }),
+});
+window.__feedback = feedbackUI.fb; // test hook
 let lastWall = Date.now();
 let lastSave = 0;
 let lastRender = 0;
@@ -39,12 +45,15 @@ function setGoalButton(btn, label, cost, cash) {
 const mmss = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 
 const OVERLAYS = ['reveal-shop', 'launch', 'teaser', 'franchise-confirm', 'franchise-reveal'];
+let currentOverlay = null;
 function showOverlay(id, focusId) {
+  currentOverlay = id;
+  $('btn-feedback-overlay').hidden = !id;
   for (const o of OVERLAYS) $(o).hidden = o !== id;
   if (id) $(id).scrollTop = 0;
   if (focusId) $(focusId).focus({ preventScroll: true });
 }
-function hideOverlays() { for (const o of OVERLAYS) $(o).hidden = true; }
+function hideOverlays() { currentOverlay = null; $('btn-feedback-overlay').hidden = true; for (const o of OVERLAYS) $(o).hidden = true; }
 
 function show(which) {
   $('screen-name').hidden = which !== 'name';
@@ -77,6 +86,7 @@ function renderProfiles() {
 
 function showNameScreen() {
   profile = null;
+  feedbackUI.setPlayer(null);
   hideOverlays();
   document.body.classList.remove('shop', 'space');
   $('panel').hidden = true;
@@ -90,7 +100,7 @@ $('name-form').addEventListener('submit', (e) => {
   e.preventDefault();
   const name = $('name-input').value.trim();
   if (!validName(name)) {
-    $('name-error').textContent = 'Use 1 to 32 characters.';
+    $('name-error').textContent = name.startsWith('feedback:') ? 'That name is reserved. Pick another.' : 'Use 1 to 32 characters.';
     return;
   }
   startProfile(name);
@@ -99,6 +109,7 @@ $('name-form').addEventListener('submit', (e) => {
 /* ---------- profile start / offline progress ---------- */
 function startProfile(name) {
   profile = name;
+  feedbackUI.setPlayer(name);
   const env = saves.get(name);
   let away = null;
   if (env) {

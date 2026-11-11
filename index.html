@@ -23,12 +23,16 @@
     </div>
     <p class="note">Saves live only in this browser. Use Export save to keep a copy.</p>
     <button type="button" id="open-import-name" class="btn">Import a save</button>
+    <button type="button" id="btn-feedback-name" class="btn">Feedback</button>
   </section>
 
   <section id="screen-game" class="screen" hidden>
     <header class="top">
-      <div><span class="who-label">Stand of</span> <strong id="who"></strong></div>
-      <div id="clock" class="clock"></div>
+      <div class="top-info">
+        <div><span class="who-label">Stand of</span> <strong id="who"></strong></div>
+        <div id="clock" class="clock"></div>
+      </div>
+      <button type="button" id="btn-feedback" class="btn fb-btn">Feedback</button>
     </header>
     <div id="away" class="banner" hidden></div>
     <div id="rush" class="banner rush" role="status" hidden></div>
@@ -78,6 +82,36 @@
       <button type="button" id="btn-switch" class="btn">Switch profile</button>
     </div>
   </section>
+
+  <p id="app-version" class="version"></p>
+
+  <section id="fb-panel" class="panel fb-panel" role="dialog" aria-modal="true" aria-labelledby="fb-title" hidden>
+    <div class="panel-card">
+      <h2 id="fb-title" tabindex="-1">Feedback</h2>
+      <div id="fb-q-block">
+        <p class="kicker">A question for you</p>
+        <p id="fb-q-text" class="fb-q-text"></p>
+        <div id="fb-q-options" class="fb-options" role="group" aria-label="Choices"></div>
+        <textarea id="fb-q-input" rows="4" maxlength="2000" aria-label="Your answer"></textarea>
+        <button type="button" id="fb-q-submit" class="btn primary" disabled>Submit</button>
+      </div>
+      <p id="fb-q-done" class="note" hidden>No more questions right now. Thank you! You can still tell us anything below.</p>
+      <h3 class="fb-sub">Anything else?</h3>
+      <p class="note">A bug, an idea, a thing you loved or hated. Write it here any time.</p>
+      <textarea id="fb-free-input" rows="4" maxlength="2000" aria-label="Your feedback"></textarea>
+      <button type="button" id="fb-free-submit" class="btn primary" disabled>Submit</button>
+      <p id="fb-msg" class="error" role="status"></p>
+      <p id="fb-unsent" class="note fb-unsent">unsent: 0</p>
+      <p id="fb-note" class="note" hidden>Feedback is kept on this phone for now. Use Export feedback to copy it out.</p>
+      <button type="button" id="fb-export" class="btn">Export feedback</button>
+      <textarea id="fb-export-text" rows="5" readonly hidden aria-label="Exported feedback"></textarea>
+      <button type="button" id="fb-copy" class="btn" hidden>Copy to clipboard</button>
+      <p id="fb-version" class="version"></p>
+      <button type="button" id="fb-close" class="btn">Close</button>
+    </div>
+  </section>
+  <div id="fb-toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <button type="button" id="btn-feedback-overlay" class="btn fb-btn fb-overlay-btn" hidden>Feedback</button>
 
   <section id="panel" class="panel" role="dialog" aria-modal="true" aria-labelledby="panel-title" hidden>
     <div class="panel-card">

@@ -5,9 +5,10 @@ export const PREFIX = `lemon-empire:v${VERSION}:`;
 export const MAX_BYTES = 1024 * 1024;
 export const MAX_NAME = 32;
 
+// Names starting with "feedback:" are reserved: src/feedback.js keeps its queue under lemon-empire:v1:feedback:<name>.
 export function validName(name) {
   return typeof name === 'string' && name.trim() === name && name.length >= 1 &&
-    name.length <= MAX_NAME && !/[\u0000-\u001f\u007f]/.test(name) && name !== '__proto__';
+    name.length <= MAX_NAME && !/[\u0000-\u001f\u007f]/.test(name) && name !== '__proto__' && !name.startsWith('feedback:');
 }
 
 const isNum = (x) => typeof x === 'number' && Number.isFinite(x);
