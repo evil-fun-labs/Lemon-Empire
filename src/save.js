@@ -112,5 +112,15 @@ export function createSave({ backend = globalThis.localStorage, now = () => Date
     return env;
   }
 
-  return { get, put, list, exportProfile, importProfile };
+  // Deletes only this profile's save (key lemon-empire:v1:<name>). Returns true if a save was removed, false if there was none.
+  // Throws on an invalid name, so a bad name can never reach another key (feedback queues are reserved names).
+  function remove(name) {
+    if (!validName(name)) throw new Error('bad profile name');
+    const k = key(name);
+    if (backend.getItem(k) == null) return false;
+    backend.removeItem(k);
+    return true;
+  }
+
+  return { get, put, list, remove, exportProfile, importProfile };
 }

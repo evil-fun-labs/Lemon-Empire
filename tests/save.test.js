@@ -5,7 +5,7 @@ import { createGame } from '../src/sim.js';
 function fakeBackend() {
   const m = new Map();
   return { m, get length() { return m.size; }, key: (i) => [...m.keys()][i] ?? null,
-    getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)) };
+    getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => { m.delete(k); } };
 }
 const t = suite('save module (fake in-memory backend)');
 const mk = () => { const b = fakeBackend(); return { b, s: createSave({ backend: b, now: () => 1700000000000 }) }; };
@@ -107,5 +107,33 @@ t.test('name limit: 32 chars ok, 33 rejected', () => {
   const { s } = mk();
   s.put('x'.repeat(32), good());
   assert.throws(() => s.put('x'.repeat(33), good()));
+});
+t.test('remove deletes only that profile and leaves others and unrelated keys', () => {
+  const { b, s } = mk(); s.put('A', good()); s.put('B', { ...good(), cash: 321 });
+  b.setItem('unrelated', 'x');
+  b.setItem('lemon-empire:v1:feedback:A', '[{"q":"kept"}]');
+  const bBefore = b.getItem('lemon-empire:v1:B');
+  assert.equal(s.remove('A'), true);
+  assert.equal(s.get('A'), null);
+  assert.deepEqual(s.list(), ['B']);
+  assert.equal(b.getItem('lemon-empire:v1:B'), bBefore);
+  assert.equal(b.getItem('unrelated'), 'x');
+  assert.equal(b.getItem('lemon-empire:v1:feedback:A'), '[{"q":"kept"}]');
+});
+t.test('remove of a missing profile is ok and returns false', () => {
+  const { b, s } = mk(); s.put('A', good());
+  assert.equal(s.remove('nobody'), false);
+  assert.equal(s.remove('A'), true);
+  assert.equal(s.remove('A'), false);
+  assert.equal(b.m.size, 0);
+});
+t.test('remove rejects invalid names and touches nothing', () => {
+  const { b, s } = mk(); s.put('A', good());
+  b.setItem('lemon-empire:v1:feedback:A', 'fb');
+  const before = JSON.stringify([...b.m]);
+  for (const bad of ['', ' A', 'A ', 'x'.repeat(33), 'a\nb', '__proto__', 'feedback:A', null, undefined, 5, {}]) {
+    assert.throws(() => s.remove(bad), undefined, `should reject ${String(bad)}`);
+  }
+  assert.equal(JSON.stringify([...b.m]), before);
 });
 t.done();

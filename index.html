@@ -126,6 +126,14 @@
       <textarea id="import-text" rows="4" aria-label="Paste save text to import"></textarea>
       <p id="import-msg" class="error" role="status"></p>
       <button type="button" id="btn-import" class="btn">Import</button>
+      <div id="restart-block">
+        <button type="button" id="btn-restart" class="btn">Start over as a new player</button>
+        <div id="restart-confirm-box" hidden>
+          <p class="note">This erases your stand, upgrades, Shop, rocket and Franchises for this profile and starts a brand-new game under the same name. It cannot be undone. Export first if you want a copy.</p>
+          <button type="button" id="btn-restart-confirm" class="btn primary">Yes, erase my save and start over</button>
+          <button type="button" id="btn-restart-cancel" class="btn">Cancel, keep my save</button>
+        </div>
+      </div>
       <button type="button" id="btn-close" class="btn">Close</button>
     </div>
   </section>
