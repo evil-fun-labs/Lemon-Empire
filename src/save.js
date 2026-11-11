@@ -39,6 +39,9 @@ export function validateEnvelope(env) {
   for (const [k, v] of Object.entries(st.owned)) {
     if (!isNonNeg(v) || !Number.isInteger(v)) throw new Error(`bad owned count: ${k}`);
   }
+  for (const k of ['shop', 'rocket']) { // slice 2 fields; absent in older saves
+    if (k in st && typeof st[k] !== 'boolean') throw new Error(`bad ${k}: must be true or false`);
+  }
   if (!Array.isArray(st.upgrades) || st.upgrades.length > 100 || !st.upgrades.every((u) => typeof u === 'string')) {
     throw new Error('bad upgrades');
   }

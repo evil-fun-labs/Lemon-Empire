@@ -11,11 +11,29 @@ export const OFFLINE_CAP_S = 8 * 3600;
 export const STAND_SUGAR = 0.1;
 export const START = { cash: 10, lemons: 0, sugar: 5 };
 
+// tier 1 = the stand; tier 2 = the Shop. `makes` is what the producer adds each second.
+// Tier ratios follow docs/reference-numbers.md: base cost x12 per tier, output x6 per tier.
 export const PRODUCERS = [
-  { id: 'tree', name: 'Lemon Tree', blurb: 'Grows lemons', unit: 'lemons/s', base: 15, rate: 0.5 },
-  { id: 'sugar', name: 'Sugar Patch', blurb: 'Grows sugar', unit: 'sugar/s', base: 20, rate: 0.5 },
-  { id: 'helper', name: 'Stand Helper', blurb: 'Sells cups for you', unit: 'cups/s', base: 50, rate: 0.4 },
+  { id: 'tree', name: 'Lemon Tree', blurb: 'Grows lemons', unit: 'lemons/s', base: 15, rate: 0.5, tier: 1, makes: 'lemons' },
+  { id: 'sugar', name: 'Sugar Patch', blurb: 'Grows sugar', unit: 'sugar/s', base: 20, rate: 0.5, tier: 1, makes: 'sugar' },
+  { id: 'helper', name: 'Stand Helper', blurb: 'Sells cups for you', unit: 'cups/s', base: 50, rate: 0.4, tier: 1, makes: 'cups' },
+  { id: 'orchard', name: 'Shop Orchard', blurb: 'Grows lemons by the crate', unit: 'lemons/s', base: 180, rate: 3, tier: 2, makes: 'lemons' },
+  { id: 'refinery', name: 'Sugar Refinery', blurb: 'Makes sugar by the sack', unit: 'sugar/s', base: 240, rate: 3, tier: 2, makes: 'sugar' },
+  { id: 'clerk', name: 'Shop Clerk', blurb: 'Serves a whole queue', unit: 'cups/s', base: 600, rate: 2.4, tier: 2, makes: 'cups' },
 ];
+
+// Milestones (placeholders, untuned).
+export const SHOP_MILESTONE_CUPS = 300; // cups sold before the Shop can be opened
+export const SHOP_COST = 1200; // cash to expand into a Shop
+export const ROCKET_MILESTONE_UNITS = 10; // Shop producers owned before the rocket can be built
+export const ROCKET_COST = 20000; // cash to build and launch the Lemon Rocket
+
+// Customer rush: one per run. Start minute = 3 + floor(12 * u2), u2 = first draw of prng("rush", seed)
+// (docs/test-spec.md section 2). Duration and size are constants.
+export const RUSH_MIN_MINUTE = 3;
+export const RUSH_MINUTE_SPAN = 12;
+export const RUSH_DURATION_S = 60;
+export const RUSH_PRICE_MULT = 2; // every cup sells for double while the rush lasts
 
 // Three kinds, two tiers each. Tier 2 needs tier 1 of the same kind.
 //  speed:      all producers work faster
@@ -40,9 +58,10 @@ export function multipliers(upgradeIds) {
   return m;
 }
 
-// Income per second at full stock (cash from the Stand Helpers).
+// Income per second at full stock (cash from everything that sells cups), outside a rush.
 export function incomePerSecond(owned, upgradeIds, demand) {
   const m = multipliers(upgradeIds);
-  const helper = PRODUCERS.find((p) => p.id === 'helper');
-  return (owned.helper || 0) * helper.rate * m.speed * BASE_PRICE * demand;
+  let cups = 0;
+  for (const p of PRODUCERS) if (p.makes === 'cups') cups += (owned[p.id] || 0) * p.rate * m.speed;
+  return cups * BASE_PRICE * demand;
 }
