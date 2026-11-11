@@ -1,0 +1,765 @@
+{
+  "viewport": "390x844 dpr3 touch",
+  "total": 106,
+  "under44": [],
+  "targets": {
+    "shopOffer": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-shop",
+        "text": "Expand into a Shop for $1.20K",
+        "w": 326,
+        "h": 64
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (0)$15Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (0)$20Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (0)$50Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick Squeezer$120SPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk Discount$100COST: Produce",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      }
+    ],
+    "shopReveal": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (0)$15Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (0)$20Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (0)$50Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Orchard (0)$180Grows lemo",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Refinery (0)$240Makes su",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Clerk (0)$600Serves a who",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick Squeezer$120SPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk Discount$100COST: Produce",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-reveal-shop-close",
+        "text": "Open the Shop",
+        "w": 350,
+        "h": 64
+      }
+    ],
+    "shopScreen": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (0)$15Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (0)$20Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (0)$50Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Orchard (1)$207Grows lemo",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Refinery (0)$240Makes su",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Clerk (0)$600Serves a who",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick Squeezer$120SPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk Discount$100COST: Produce",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      }
+    ],
+    "rocketOffer": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-launch",
+        "text": "Build and launch for $20.0K",
+        "w": 326,
+        "h": 64
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (0)$15Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (0)$20Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (0)$50Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Orchard (10)$729Grows lem",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Refinery (0)$240Makes su",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Clerk (0)$600Serves a who",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick Squeezer$120SPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk Discount$100COST: Produce",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      }
+    ],
+    "launch": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (0)$15Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (0)$20Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (0)$50Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Orchard (10)$729Grows lem",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Refinery (0)$240Makes su",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Clerk (0)$600Serves a who",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick Squeezer$120SPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk Discount$100COST: Produce",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-launch-continue",
+        "text": "Continue",
+        "w": 260,
+        "h": 48
+      }
+    ],
+    "teaser": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (0)$15Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (0)$20Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (0)$50Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Orchard (10)$729Grows lem",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Refinery (0)$240Makes su",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Clerk (0)$600Serves a who",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick Squeezer$120SPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk Discount$100COST: Produce",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-teaser-close",
+        "text": "Back to my Shop",
+        "w": 350,
+        "h": 64
+      }
+    ],
+    "spaceGame": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (0)$15Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (0)$20Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (0)$50Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Orchard (10)$729Grows lem",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Refinery (0)$240Makes su",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Clerk (0)$600Serves a who",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick Squeezer$120SPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk Discount$100COST: Produce",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      }
+    ],
+    "spaceGameBottom": [
+      {
+        "tag": "button",
+        "id": "btn-squeeze",
+        "text": "Squeeze a lemon",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "btn-sell",
+        "text": "Sell cups",
+        "w": 174,
+        "h": 73.7
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Lemon Tree (0)$15Grows lemons,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Patch (0)$20Grows sugar,",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Stand Helper (0)$50Sells cups ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Orchard (10)$729Grows lem",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Sugar Refinery (0)$240Makes su",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Shop Clerk (0)$600Serves a who",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Quick Squeezer$120SPEED: Produ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Thrifty Recipe$120EFFICIENCY: ",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "",
+        "text": "Bulk Discount$100COST: Produce",
+        "w": 358,
+        "h": 68.4
+      },
+      {
+        "tag": "button",
+        "id": "btn-export",
+        "text": "Export save",
+        "w": 358,
+        "h": 48
+      },
+      {
+        "tag": "button",
+        "id": "btn-switch",
+        "text": "Switch profile",
+        "w": 358,
+        "h": 48
+      }
+    ]
+  }
+}

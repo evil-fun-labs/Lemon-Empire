@@ -31,6 +31,7 @@
       <div id="clock" class="clock"></div>
     </header>
     <div id="away" class="banner" hidden></div>
+    <div id="rush" class="banner rush" role="status" hidden></div>
     <div class="resources" aria-live="off">
       <div class="res"><span class="res-name">Cash</span><span id="r-cash" class="res-val">0</span></div>
       <div class="res"><span class="res-name">Lemons</span><span id="r-lemons" class="res-val">0</span></div>
@@ -41,11 +42,30 @@
       <button type="button" id="btn-squeeze" class="btn big primary">Squeeze a lemon</button>
       <button type="button" id="btn-sell" class="btn big">Sell cups</button>
     </div>
-    <h2>Producers</h2>
+    <div id="shop-offer" class="goal" hidden>
+      <h2>Next: open a Shop</h2>
+      <p id="shop-progress" class="note"></p>
+      <button type="button" id="btn-shop" class="btn big primary" hidden></button>
+    </div>
+    <div id="rocket-offer" class="goal" hidden>
+      <h2>Next: the Lemon Rocket</h2>
+      <p id="rocket-progress" class="note"></p>
+      <button type="button" id="btn-launch" class="btn big primary" hidden></button>
+    </div>
+    <h2>Stand</h2>
     <div id="producers" class="list"></div>
+    <div id="shop-section" hidden>
+      <h2>Shop</h2>
+      <div id="shop-producers" class="list"></div>
+    </div>
     <h2>Upgrades</h2>
     <p class="note">Each upgrade is one-time. Pick what suits your stand.</p>
     <div id="upgrades" class="list"></div>
+    <div id="teaser-card" class="teaser-card" hidden>
+      <span class="kind">Next tier</span>
+      <strong>Lunar Lemon Colony</strong>
+      <span class="note">Coming soon. Not playable yet.</span>
+    </div>
     <div class="backup">
       <p class="note">Your save lives only on this phone. Export it now and then so you never lose your stand.</p>
       <button type="button" id="btn-export" class="btn">Export save</button>
@@ -66,6 +86,53 @@
       <p id="import-msg" class="error" role="status"></p>
       <button type="button" id="btn-import" class="btn">Import</button>
       <button type="button" id="btn-close" class="btn">Close</button>
+    </div>
+  </section>
+
+  <!-- Reveal 1: the stand becomes a Shop. A screen of its own, not a menu. -->
+  <section id="reveal-shop" class="overlay reveal-shop" role="dialog" aria-modal="true" aria-labelledby="reveal-shop-title" hidden>
+    <div class="overlay-inner">
+      <div class="shopfront" aria-hidden="true">
+        <div class="awning"></div>
+        <div class="sign">LEMON SHOP</div>
+        <div class="door"></div>
+      </div>
+      <p class="kicker">Grand opening</p>
+      <h2 id="reveal-shop-title">Your stand is now a Shop!</h2>
+      <p>Orchards, refineries and clerks are hiring. Bigger crews, bigger money, and something far bigger waiting down the road.</p>
+      <button type="button" id="btn-reveal-shop-close" class="btn big primary">Open the Shop</button>
+    </div>
+  </section>
+
+  <!-- Reveal 2: the rocket launches and the look shifts to a starfield. -->
+  <section id="launch" class="overlay launch" role="dialog" aria-modal="true" aria-label="Lemon Rocket launch" hidden>
+    <div class="stars s1"></div><div class="stars s2"></div><div class="stars s3"></div>
+    <div class="ground" aria-hidden="true"></div>
+    <div class="rocket" aria-hidden="true">
+      <svg viewBox="0 0 60 150" width="84" height="210" focusable="false">
+        <path d="M30 4 C44 24 48 52 46 92 L14 92 C12 52 16 24 30 4 Z" fill="#fff6c8" stroke="#3a2a00" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="30" cy="48" r="9" fill="#6bd0ff" stroke="#3a2a00" stroke-width="3"/>
+        <path d="M14 70 L2 104 L14 96 Z M46 70 L58 104 L46 96 Z" fill="#f0a000" stroke="#3a2a00" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="20" y="92" width="20" height="8" rx="2" fill="#7a6420" stroke="#3a2a00" stroke-width="3"/>
+      </svg>
+      <div class="flame"></div>
+    </div>
+    <p class="cap cap-1">Ignition</p>
+    <p class="cap cap-2">Liftoff!</p>
+    <p class="cap cap-3">Orbit reached</p>
+    <button type="button" id="btn-launch-continue" class="btn launch-continue">Continue</button>
+  </section>
+
+  <!-- After the launch: the next tier, shown but not playable. -->
+  <section id="teaser" class="overlay teaser" role="dialog" aria-modal="true" aria-labelledby="teaser-title" hidden>
+    <div class="stars s1"></div><div class="stars s2"></div><div class="stars s3"></div>
+    <div class="overlay-inner">
+      <div class="moon" aria-hidden="true"><span class="crater c1"></span><span class="crater c2"></span><span class="crater c3"></span></div>
+      <p class="kicker">Next tier</p>
+      <h2 id="teaser-title">Lunar Lemon Colony</h2>
+      <p>The rocket made it. Up here, a moon base for lemons is being drawn up.</p>
+      <p class="locked-tag">Not playable yet. Coming in a later update.</p>
+      <button type="button" id="btn-teaser-close" class="btn big primary">Back to my Shop</button>
     </div>
   </section>
 </main>

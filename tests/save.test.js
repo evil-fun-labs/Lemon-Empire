@@ -54,6 +54,16 @@ rejects('string cash', JSON.stringify((() => { const e = env(); e.state.cash = '
 rejects('NaN-like cash (null)', JSON.stringify((() => { const e = env(); e.state.cash = null; return e; })()));
 rejects('bad name', JSON.stringify({ ...env(), name: '' }));
 rejects('fractional owned count', JSON.stringify((() => { const e = env(); e.state.owned.tree = 1.5; return e; })()));
+rejects('non-boolean shop flag', JSON.stringify((() => { const e = env(); e.state.shop = 'yes'; return e; })()));
+rejects('non-boolean rocket flag', JSON.stringify((() => { const e = env(); e.state.rocket = 1; return e; })()));
+t.test('slice-1 saves without shop/rocket still import; slice-2 saves round-trip', () => {
+  const e = env(); delete e.state.shop; delete e.state.rocket;
+  assert.doesNotThrow(() => mk().s.importProfile(JSON.stringify(e)));
+  const g = createGame(5); g.load({ ...g.snapshot(), cash: 1e5, cupsSold: 500 }); g.buy('shop');
+  const { s } = mk(); s.put('K', g.snapshot());
+  assert.equal(s.get('K').state.shop, true);
+  assert.deepEqual(JSON.parse(mk().s.importProfile(s.exportProfile('K')) && s.exportProfile('K')).state, g.snapshot());
+});
 rejects('array root', '[]');
 rejects('oversize (> 1 MB)', JSON.stringify({ ...env(), pad: 'x'.repeat(MAX_BYTES + 1) }));
 rejects('__proto__ key', JSON.stringify(env()).replace('"v":1', '"v":1,"__proto__":{"admin":true}'));

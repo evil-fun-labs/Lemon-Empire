@@ -2,7 +2,10 @@
 import { createGame } from './sim.js';
 import { createSave, validName } from './save.js';
 import { fmt } from './format.js';
-import { PRODUCERS, UPGRADES, OFFLINE_CAP_S, incomePerSecond, multipliers } from './economy.js';
+import {
+  PRODUCERS, UPGRADES, OFFLINE_CAP_S, incomePerSecond, multipliers,
+  SHOP_MILESTONE_CUPS, SHOP_COST, ROCKET_MILESTONE_UNITS, ROCKET_COST, RUSH_PRICE_MULT,
+} from './economy.js';
 
 const $ = (id) => document.getElementById(id);
 const game = createGame(1);
@@ -25,6 +28,14 @@ let lastRender = 0;
 const money = (n) => '$' + fmt(n);
 const mmss = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 
+const OVERLAYS = ['reveal-shop', 'launch', 'teaser'];
+function showOverlay(id, focusId) {
+  for (const o of OVERLAYS) $(o).hidden = o !== id;
+  if (id) $(id).scrollTop = 0;
+  if (focusId) $(focusId).focus({ preventScroll: true });
+}
+function hideOverlays() { for (const o of OVERLAYS) $(o).hidden = true; }
+
 function show(which) {
   $('screen-name').hidden = which !== 'name';
   $('screen-game').hidden = which !== 'game';
@@ -46,6 +57,8 @@ function renderProfiles() {
 
 function showNameScreen() {
   profile = null;
+  hideOverlays();
+  document.body.classList.remove('shop', 'space');
   $('panel').hidden = true;
   $('name-input').value = '';
   $('name-error').textContent = '';
@@ -86,6 +99,7 @@ function startProfile(name) {
     banner.textContent = `Welcome back! In ${mmss(away.secs)} away your stand earned ${money(away.earned)}.`;
     banner.hidden = false;
   } else banner.hidden = true;
+  hideOverlays();
   buildLists();
   show('game');
   lastWall = Date.now();
@@ -114,7 +128,8 @@ function itemButton(id, name, kindText, desc, onBuy) {
 
 function buildLists() {
   const pl = $('producers'); pl.replaceChildren();
-  for (const p of PRODUCERS) pl.appendChild(itemButton(p.id, p.name, '', '', () => game.buy(p.id)));
+  const sl = $('shop-producers'); sl.replaceChildren();
+  for (const p of PRODUCERS) (p.tier === 2 ? sl : pl).appendChild(itemButton(p.id, p.name, '', '', () => game.buy(p.id)));
   const ul = $('upgrades'); ul.replaceChildren();
   for (const u of UPGRADES) {
     const b = itemButton(u.id, u.name, u.kind, `${u.kind.toUpperCase()}: ${u.desc}`, () => game.buy(u.id));
@@ -133,6 +148,27 @@ function render(force) {
   $('clock').textContent = 'Play time ' + mmss(v.time);
   const ips = incomePerSecond(v.owned, v.upgrades, v.demand);
   $('income').textContent = ips > 0 ? `Up to ${money(ips)} per second from helpers` : 'Selling needs a lemon and sugar for each cup. Hire a Stand Helper to sell while you rest';
+  document.body.classList.toggle('shop', v.shop);
+  document.body.classList.toggle('space', v.rocket);
+  $('shop-offer').hidden = v.shop;
+  $('shop-progress').textContent = v.shopReady
+    ? `Your stand sold ${fmt(v.cupsSold)} cups. Time to grow!`
+    : `Sell ${SHOP_MILESTONE_CUPS} cups to unlock a Shop: ${Math.floor(v.cupsSold)} of ${SHOP_MILESTONE_CUPS} so far.`;
+  $('btn-shop').hidden = !v.shopReady;
+  $('btn-shop').textContent = `Expand into a Shop for ${money(SHOP_COST)}`;
+  $('btn-shop').disabled = v.cash < SHOP_COST;
+  $('shop-section').hidden = !v.shop;
+  $('rocket-offer').hidden = !v.shop || v.rocket;
+  $('rocket-progress').textContent = v.rocketReady
+    ? 'The Lemon Rocket is ready to build. It is a big step, so it costs a lot.'
+    : `Own ${ROCKET_MILESTONE_UNITS} Shop producers to start the Lemon Rocket: ${Math.min(v.shopUnits, ROCKET_MILESTONE_UNITS)} of ${ROCKET_MILESTONE_UNITS} so far.`;
+  $('btn-launch').hidden = !v.rocketReady;
+  $('btn-launch').textContent = `Build and launch for ${money(ROCKET_COST)}`;
+  $('btn-launch').disabled = v.cash < ROCKET_COST;
+  $('teaser-card').hidden = !v.rocket;
+  const rushBox = $('rush');
+  rushBox.hidden = !v.rush.active;
+  if (v.rush.active) rushBox.textContent = `Customer rush! Cups pay ${RUSH_PRICE_MULT}x for ${Math.ceil(v.rush.end - v.time)} more seconds`;
   for (const p of PRODUCERS) {
     const e = itemEls[p.id]; if (!e) continue;
     const rate = p.rate * multipliers(v.upgrades).speed;
@@ -151,6 +187,21 @@ function render(force) {
     e.b.disabled = owned || v.cash < u.cost;
   }
 }
+
+/* ---------- reveals: Shop, rocket launch, next-tier teaser ---------- */
+$('btn-shop').addEventListener('click', () => {
+  if (!game.buy('shop')) return;
+  saveNow(); render(true);
+  showOverlay('reveal-shop', 'btn-reveal-shop-close');
+});
+$('btn-reveal-shop-close').addEventListener('click', () => { showOverlay(null); window.scrollTo(0, 0); });
+$('btn-launch').addEventListener('click', () => {
+  if (!game.buy('rocket')) return;
+  saveNow(); render(true);
+  showOverlay('launch', 'btn-launch-continue');
+});
+$('btn-launch-continue').addEventListener('click', () => showOverlay('teaser', 'btn-teaser-close'));
+$('btn-teaser-close').addEventListener('click', () => { showOverlay(null); window.scrollTo(0, 0); });
 
 $('btn-squeeze').addEventListener('click', () => { game.click(); render(true); });
 $('btn-sell').addEventListener('click', () => { game.sell(); render(true); saveNow(); });
